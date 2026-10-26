@@ -33,7 +33,12 @@ Build the native helper before starting native tests; Windows locks its loaded D
 - Synthetic renderer fixtures passed 12 groups of interaction checks, including failure/cancellation/persistence. Audio polling stops after leaving Audio. Navigation remains reachable at 100%, 125%, 150% and 200% renderer zoom. Forced colors, increased contrast and reduced transparency use solid surfaces.
 - Disposable legacy 1.0.2/1.1.0-shaped profiles preserved Unicode notes, custom/preset theme choices and desktop settings. Manual launch was visible, the introduction persisted only after Continue, restart did not repeat it, and `--startup` stayed hidden. These are profile migration checks, not clean-VM installer tests.
 
-Packaged acceptance, final CI, package hashes and the local installed upgrade are recorded in the release notes after completion.
+- Packaged initial/restart acceptance passed with exit code 0. Installer and ZIP executable, app archive and native helper bytes matched the tested unpacked build. Five Electron security fuses, packaged version/source and exclusion of profiles/credentials passed inspection.
+- [Windows CI](https://github.com/ahmed-progra/sapphire-windows/actions/runs/40299491312) passed fresh install, 45 unit tests, production build, renderer interaction fixtures and the standard .NET SDK native build. Local release binaries use the pinned fallback native build.
+- Gitleaks 8.30.1 found no secrets in the curated source snapshot. Runtime npm audit: zero vulnerabilities. The full audit still reports three moderate build-tool findings through Tailwind/PostCSS, zero high/critical; resolving npm's suggested fix requires a major Tailwind migration outside this release.
+- The actual installed 1.0.2 was closed through its tray, its entire profile backed up (58 files verified), and the 1.2.0 installer exited 0. Both shortcuts launched the upgraded executable. Windows accessibility controls confirmed About's version/links and the selected Arctic Light theme after restart. All six existing stored-data entries and original settings were compared; the credential file was byte-identical. The original custom accent was restored after theme testing. Recovery-profile files are included in the backup; the upgrade does not change their storage keys.
+
+[Machine-readable, sanitized results](verification-1.2.json) contain the measurements and binary hashes. Full private diagnostics remain outside Git. The disk filled during extraction of an extra verification copy; only generated project copies and superseded local release binaries were removed. Streamed archive verification then passed. Approximately 1 GB remained free after installation.
 
 ## Visible-window frame pacing
 
@@ -46,8 +51,10 @@ Packaged acceptance, final CI, package hashes and the local installed upgrade ar
 | Later 1.2 run | 16.4 ms | 16.7 ms | **81.9 ms** | 24.6 ms | 0 |
 | Matched repeat: 1.1.0 | 16.4 ms | 16.7 ms | 32.7 ms | 24.6 ms | 0 |
 | Matched repeat: 1.2.0 | 16.4 ms | 16.8 ms | 18.6 ms | 24.6 ms | 0 |
+| 1.2 during package compression | 16.4 ms | 16.6 ms | **98.4 ms** | 24.6 ms | 0 |
+| Final 1.2 after builds finished | 16.4 ms | 16.6 ms | 18.4 ms | 24.6 ms | 0 |
 
-Windows reported a 144 Hz display, but observed Chromium pacing varied between runs. No claim of a fixed 144 fps or a measured p95 speedup is made. The matched repeat met both targets. The earlier 81.9 ms gap missed the 50 ms frame-gap target despite no JavaScript long task; its exact cause was not established. The probe now records the interaction phase, focus and visibility for every >50 ms gap and fails on frame gaps as well as long tasks. The miss did not recur in the matched repeat. Short tests do not establish long-duration smoothness.
+Windows reported a 144 Hz display, but observed Chromium pacing varied between runs. No claim of a fixed 144 fps or a measured p95 speedup is made. The matched repeat met both targets. The earlier 81.9 ms gap missed the 50 ms frame-gap target despite no JavaScript long task; its exact cause was not established. The probe now records the interaction phase, focus and visibility for every >50 ms gap and fails on frame gaps as well as long tasks. The matched repeat passed. A profiling run overlapping CPU-intensive package compression recorded a 98.4 ms gap during the first expansion, while focused and visible; this run correctly failed. After packaging finished, the final run passed both targets (maximum 18.4 ms). That run recorded zero storage writes during the interaction sequence and 18 media/18 battery reads plus one capabilities read. No durable-save debouncing or polling reductions were introduced without evidence. The two missed runs remain in the report; their exact rendering/scheduling causes are not established. Short tests do not establish long-duration smoothness.
 
 ## Tool audit
 

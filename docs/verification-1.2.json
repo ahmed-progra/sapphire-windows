@@ -1,0 +1,233 @@
+{
+  "version": "1.2.0",
+  "date": "2026-10-26",
+  "implementationCommit": "04ec3067c349f1c5a4a65eb36357c45036484887",
+  "unitTests": {
+    "passed": 45,
+    "failed": 0
+  },
+  "native": {
+    "self": 15,
+    "ownedWindow": 9,
+    "ownedSilentAudio": 2,
+    "protocol": 17,
+    "cleanShutdown": true
+  },
+  "sourceDesktop": {
+    "passed": true,
+    "results": [
+      {
+        "phase": "initial",
+        "code": 0
+      },
+      {
+        "phase": "restart",
+        "code": 0
+      }
+    ]
+  },
+  "packagedDesktop": {
+    "passed": true,
+    "results": [
+      {
+        "phase": "initial",
+        "code": 0
+      },
+      {
+        "phase": "restart",
+        "code": 0
+      }
+    ]
+  },
+  "widgets": {
+    "passed": true,
+    "scope": "Synthetic renderer fixtures, not real providers or hardware",
+    "checks": [
+      "All 15 tools mount with empty/unavailable fixtures",
+      "Notes failure preserves editor; explicit retry saves latest text",
+      "Clipboard opt-in, empty search, clear cancellation and failed clear",
+      "Files cancellation, missing-file state and failed removal",
+      "Calendar import, remount persistence and failed removal",
+      "Focus failed start, start and pause persistence",
+      "Audio polling stops on unmount",
+      "Blip setup failure; screen capture cancellation",
+      "Provider results survive refresh failure",
+      "Snap failure and recovery; unavailable Hello cannot claim verification",
+      "Cancelled export has no success message; provider setup status; About version",
+      "Navigation at 100/125/150/200% browser zoom; solid contrast/transparency treatments"
+    ]
+  },
+  "launchProfiles": [
+    {
+      "scenario": "legacy-102",
+      "restarting": false,
+      "passed": true,
+      "windowVisible": true,
+      "notesPreserved": true,
+      "theme": "custom",
+      "introductionOnce": true
+    },
+    {
+      "scenario": "legacy-110",
+      "restarting": false,
+      "passed": true,
+      "windowVisible": true,
+      "notesPreserved": true,
+      "theme": "paper",
+      "introductionOnce": true
+    },
+    {
+      "scenario": "startup",
+      "restarting": false,
+      "passed": true,
+      "windowVisible": false,
+      "notesPreserved": true,
+      "theme": "custom",
+      "introductionOnce": false
+    }
+  ],
+  "restartedProfiles": [
+    {
+      "scenario": "legacy-102",
+      "restarting": true,
+      "passed": true,
+      "windowVisible": true,
+      "notesPreserved": true,
+      "theme": "custom",
+      "introductionOnce": true
+    },
+    {
+      "scenario": "legacy-110",
+      "restarting": true,
+      "passed": true,
+      "windowVisible": true,
+      "notesPreserved": true,
+      "theme": "paper",
+      "introductionOnce": true
+    }
+  ],
+  "visible": {
+    "baselineMatched": {
+      "intervalMs": 16.40000000000009,
+      "samples": 1287,
+      "p95FrameMs": 16.700000000000728,
+      "p99FrameMs": 17.599999999998545,
+      "maxFrameMs": 32.70000000000073,
+      "longTasksMs": [],
+      "frameStalls": [],
+      "documentVisible": true,
+      "focused": true,
+      "targetP95Ms": 24.600000000000136,
+      "visibleWindow": true,
+      "offscreen": false,
+      "passed": true
+    },
+    "candidateMatched": {
+      "intervalMs": 16.40000000000009,
+      "samples": 1287,
+      "p95FrameMs": 16.799999999999272,
+      "p99FrameMs": 17.19999999999891,
+      "maxFrameMs": 18.600000000000364,
+      "longTasksMs": [],
+      "frameStalls": [],
+      "documentVisible": true,
+      "focused": true,
+      "targetP95Ms": 24.600000000000136,
+      "visibleWindow": true,
+      "offscreen": false,
+      "passed": true
+    },
+    "candidateWithPackagingLoad": {
+      "intervalMs": 16.40000000000009,
+      "samples": 1283,
+      "p95FrameMs": 16.600000000002183,
+      "p99FrameMs": 17.19999999999709,
+      "maxFrameMs": 98.40000000000055,
+      "longTasksMs": [],
+      "frameStalls": [
+        {
+          "phase": "expand 0",
+          "intervalMs": 98.40000000000055,
+          "focused": true,
+          "visible": "visible"
+        }
+      ],
+      "documentVisible": true,
+      "focused": true,
+      "targetP95Ms": 24.600000000000136,
+      "activity": {
+        "storageWrites": 0,
+        "nativeCalls": {
+          "media.get": 18,
+          "battery.get": 18,
+          "native.capabilities": 1
+        }
+      },
+      "visibleWindow": true,
+      "offscreen": false,
+      "passed": false
+    },
+    "finalNoBuildLoad": {
+      "intervalMs": 16.40000000000009,
+      "samples": 1287,
+      "p95FrameMs": 16.600000000002183,
+      "p99FrameMs": 16.80000000000291,
+      "maxFrameMs": 18.399999999997817,
+      "longTasksMs": [],
+      "frameStalls": [],
+      "documentVisible": true,
+      "focused": true,
+      "targetP95Ms": 24.600000000000136,
+      "activity": {
+        "storageWrites": 0,
+        "nativeCalls": {
+          "media.get": 18,
+          "battery.get": 18,
+          "native.capabilities": 1
+        }
+      },
+      "visibleWindow": true,
+      "offscreen": false,
+      "passed": true
+    }
+  },
+  "package": {
+    "passed": true,
+    "version": "1.2.0",
+    "zipMatches": true,
+    "installerMatches": true,
+    "sourceMatches": true,
+    "securityFuses": 5,
+    "personalDataExcluded": true
+  },
+  "installed": {
+    "passed": true,
+    "version": "1.2.0",
+    "installerExit": 0,
+    "desktopShortcut": true,
+    "startMenuShortcut": true,
+    "appearanceVisible": true,
+    "aboutVersionVerified": true,
+    "themeApplied": true,
+    "themeRenderedAfterRestart": true,
+    "originalAccentAndSettingsRestored": true,
+    "existingDataKeysPreserved": 6,
+    "credentialFileUnchanged": true,
+    "profileBackupVerifiedFiles": 58
+  },
+  "ci": "https://github.com/ahmed-progra/sapphire-windows/actions/runs/40299491312",
+  "secrets": {
+    "gitleaksVersion": "8.30.1",
+    "findings": 0
+  },
+  "audit": {
+    "runtime": 0,
+    "developmentModerate": 3,
+    "high": 0,
+    "critical": 0
+  },
+  "binaries": [
+    "0ce9aac2b780b2d2d43a4562931e8d1ab113a40ed3e54e70d79c2da4ab624faa  Sapphire-1.2.0-win-x64-Setup.exe",
+    "e888cafceba8ac9489c1069f543663a696500968f35a4531e1074f5b2609e4da  Sapphire-1.2.0-win-x64.zip"
+  ]
+}
