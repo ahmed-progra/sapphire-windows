@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "allowJs": true,
+    "checkJs": false,
+    "rootDir": "electron",
+    "lib": ["ES2022"],
+    "skipLibCheck": true,
+    "sourceMap": false,
+    "outDir": "dist-electron",
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "esModuleInterop": true
+  },
+  "include": ["electron/**/*.ts", "electron/**/*.cts", "electron/**/*.mjs"],
+  "exclude": ["electron/preload.ts"]
+}

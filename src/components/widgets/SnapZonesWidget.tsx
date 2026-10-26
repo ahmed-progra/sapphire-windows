@@ -1,0 +1,9 @@
+import React,{useState} from 'react';
+import { LayoutGrid } from 'lucide-react';
+import { desktopCall,messageOf } from '../../services/desktopClient';
+const layouts=[['left','Left half'],['right','Right half'],['maximize','Maximize'],['center','Centered'],['top-left','Top left'],['top-right','Top right'],['bottom-left','Bottom left'],['bottom-right','Bottom right']];
+export const SnapZonesWidget:React.FC=()=>{
+ const [status,setStatus]=useState('Select the window you want to arrange, then open Sapphire.');const [error,setError]=useState('');
+ const snap=async(layout:string)=>{try{const result=await desktopCall('snap.apply',{layout});setStatus(result?.message||'Window arranged.');setError('');}catch(e){setError(messageOf(e));}};
+ return <section className="h-full overflow-y-auto p-5 space-y-4" aria-label="Snap zones"><div className="flex gap-2 items-center text-sm"><LayoutGrid size={18}/>Snap zones</div><p className="text-xs text-muted">Moves the previously active application into the selected area of its monitor.</p><div className="grid grid-cols-4 gap-2">{layouts.map(([id,title])=><button key={id} onClick={()=>snap(id)} className="glass-card p-3 text-xs min-h-20"><span className="block mx-auto w-9 h-6 border border-strong rounded mb-2 overflow-hidden"><span className={'block bg-accent '+(id==='maximize'?'w-full h-full':id==='left'?'w-1/2 h-full':id==='right'?'w-1/2 h-full ml-auto':id==='center'?'w-2/3 h-full mx-auto':id.includes('right')?'w-1/2 h-1/2 ml-auto':'w-1/2 h-1/2')} style={id.includes('bottom')?{marginTop:'33%'}:undefined}/></span>{title}</button>)}</div><p role="status" className="text-xs text-muted">{status}</p>{error&&<p role="alert" className="text-xs text-warning">{error}</p>}<p className="text-[11px] text-muted">Windows can prevent control of elevated or protected applications. Sapphire reports these failures.</p></section>;
+};

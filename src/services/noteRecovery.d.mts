@@ -1,0 +1,10 @@
+type NotesStorage=Pick<Storage,'getItem'|'setItem'|'removeItem'>;
+export type NoteRecovery={version:1;content:string;updatedAt:number};
+export const notesKey:'sapphire_quick_notes';
+export const notesRecoveryKey:'sapphire_notes_recovery';
+export function readNoteRecovery(storage:NotesStorage):NoteRecovery|null;
+export function preserveNoteDraft(storage:NotesStorage,content:string,now?:number):void;
+export function clearMatchingNoteRecovery(storage:NotesStorage,content:string):boolean;
+export function discardNoteRecovery(storage:NotesStorage,content:string,confirmedContent:string):void;
+export function hydrateNotes(storage:NotesStorage,content:string):void;
+export function saveNotesWithRecovery(storage:NotesStorage,content:string,persist:(value:string)=>Promise<unknown>):Promise<void>;

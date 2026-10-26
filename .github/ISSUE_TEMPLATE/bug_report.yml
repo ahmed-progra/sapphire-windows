@@ -1,0 +1,30 @@
+name: Bug report
+description: Report a reproducible Windows problem
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Use private security reporting for vulnerabilities. Never attach credentials, profiles, or private screenshots."
+  - type: input
+    id: version
+    attributes:
+      label: Sapphire version and download type
+      placeholder: "1.1.0 — installer or ZIP"
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version, architecture, display scaling
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps, expected behavior, and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Redacted error or screenshot

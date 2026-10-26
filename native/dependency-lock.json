@@ -1,0 +1,14 @@
+{
+  "packages": [
+    { "id": "microsoft.windows.sdk.net.ref", "version": "10.0.19041.87", "sha512": "6uo60OiEQ/2shNDU5vgerKsm9elKx4sTLre60FSzkPRzL5/zClEvN1mGl9o4VxB1brF7uBBLNjtXer2+wg1o2w==" },
+    { "id": "naudio.core", "version": "2.2.1", "sha512": "mI1gc6likH9pDzLEsKolvj9X+2rMunEw8s5tdOUN7tSRJAoXI3Fd6Ise6xrWsHvW1EQaWPItb5AyYk6S3ljrew==" },
+    { "id": "naudio.wasapi", "version": "2.2.1", "sha512": "AMvEdIEjdxknxt9rrzBkBSvoAYBBHUnMUHWF2B/q15k9h2q4wgPztluSBVoj3XIPrYys5OCNhND/14J7hyNqiQ==" },
+    { "id": "microsoft.netcore.app.host.win-x64", "version": "10.0.10", "sha512": "/d97NK+ijD0X1RYC+lJfGVjjNYMCswoFXgvbSVdTaqyYbTyr0tMqkQlvxvr4Ty711bPMUoPeqI7R9NACcZe/ZA==" }
+  ],
+  "installedAssemblies": {
+    "Microsoft.CodeAnalysis.CSharp.dll": "a1cbb3e005e5f91cbed130ef7eeaa79204e6bb10e05c54ce4c384a81a7646627",
+    "Microsoft.CodeAnalysis.dll": "a11461236d71889c0d7e440e9b08cb2e381f59a16a845648c3809855b6305dcd",
+    "System.Management.dll": "5c71e0b935627ecb613749074a0aada71942dd2a83d1a4666a25bbb7f06ee758",
+    "System.CodeDom.dll": "97700d9efaae699829db24da93bb1343e426c1990d5805e9181b24ff11a4874d"
+  }
+}
