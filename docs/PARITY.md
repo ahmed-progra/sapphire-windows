@@ -1,5 +1,7 @@
 # Sapphire Windows parity matrix
 
+This detailed upstream comparison began before the V1 release and retains historical acceptance notes. For current download behavior (including hidden tray startup), use [INSTALL.md](INSTALL.md); current feature boundaries and package results are in [FEATURES.md](FEATURES.md) and [VERIFICATION.md](VERIFICATION.md).
+
 Reference source is pinned to [`792f9b4ea3d556d7566fbc38592fe54e88d89dc0`](https://github.com/cshariq/Sapphire/tree/792f9b4ea3d556d7566fbc38592fe54e88d89dc0). The [upstream README](https://github.com/cshariq/Sapphire/blob/792f9b4ea3d556d7566fbc38592fe54e88d89dc0/README.md) and [product website](https://sapphire-app.tech/) were inspected on 2026-10-25. Website content is an observed product specification, not a versioned implementation or evidence of Windows behavior. Reference videos have not been played through or measured frame by frame; native macOS behavior has not been executed here.
 
 The Windows target is a desktop adaptation: a top notch, taskbar launcher, notification-area controls, real local data and supported Windows APIs. This matrix accounts for the advertised feature areas. It does not claim literal A–Z macOS parity.

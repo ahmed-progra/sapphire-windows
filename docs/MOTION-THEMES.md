@@ -1,5 +1,7 @@
 # Motion and themes — implementation and verification
 
+Historical engineering report for the source changes completed on 2026-10-26, before V1 packaging. References below to unchanged installers and uncommitted work describe that earlier stage. The public V1 includes these changes; current package results are in [VERIFICATION.md](VERIFICATION.md).
+
 Run the current source build with `npm start` from the Sapphire directory. Checks: `npm test`, `npm run build`, then `npm run test:desktop:isolated`. No dependencies were added or upgraded.
 
 The existing `run-sapphire.bat` launcher prefers installed/packaged builds. Those binaries and the portable archive were not replaced by this work. Use `npm start` to review these changes.
