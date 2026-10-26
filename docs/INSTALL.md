@@ -6,8 +6,8 @@ Use [this repository's latest release](https://github.com/ahmed-progra/sapphire-
 
 | File | Purpose |
 | --- | --- |
-| `Sapphire-1.1.0-win-x64-Setup.exe` | Recommended installer with Start menu and desktop shortcuts |
-| `Sapphire-1.1.0-win-x64.zip` | Extract everything, then open `Sapphire.exe` |
+| `Sapphire-1.2.0-win-x64-Setup.exe` | Recommended installer with Start menu and desktop shortcuts |
+| `Sapphire-1.2.0-win-x64.zip` | Extract everything, then open `Sapphire.exe` |
 | `SHA256SUMS.txt` | Hashes for the published binaries |
 | GitHub source archives | Exact tagged source for rebuilding |
 
@@ -18,18 +18,18 @@ The ZIP uses the ordinary Windows profile for settings. It does not keep all dat
 ## Verify and launch
 
 ```powershell
-Get-FileHash .\Sapphire-1.1.0-win-x64-Setup.exe -Algorithm SHA256
+Get-FileHash .\Sapphire-1.2.0-win-x64-Setup.exe -Algorithm SHA256
 ```
 
 Compare with the matching entry in `SHA256SUMS.txt`. Binaries are **unsigned**, so Windows may display a publisher warning. Confirm the source and hash before deciding whether to run the file. Do not disable antivirus or SmartScreen.
 
-Install or extract completely, then launch. Sapphire starts in the tray (including hidden notification icons). Click the tray icon or press **Ctrl+Shift+S** to show it. If another app owns the shortcut, change it in Settings. Hover or click to expand.
+Install or extract completely, then launch. A manual launch shows Sapphire and the first launch after upgrading introduces Appearance. Windows sign-in starts quietly with `--startup`. Click the tray icon or press **Ctrl+Shift+S** to show it. If another app owns the shortcut, change it in Settings → Desktop. Hover or click to expand.
 
 Close/minimize hides the panel. **Quit** in the tray menu exits. Startup with Windows is off until enabled in Settings.
 
 ## Updates and removal
 
-Export data from Settings before upgrading. Quit the running copy, then install the new version into the same directory. For ZIP updates, extract to a new folder and launch after quitting the old instance. There is no automatic updater.
+Export data from **Settings → Privacy** before upgrading. Back up the entire profile as well to preserve credentials and recovery drafts. Quit the running copy, then install the new version into the same directory. For ZIP updates, extract to a new folder and launch after quitting the old instance. There is no automatic updater.
 
 The application uses Electron's Windows user-data folder (`%APPDATA%\sapphire-windows` with the current application name). Ordinary data lives in `sapphire-data.json`, credentials separately in `credentials.json`. Preserve the entire profile before maintenance; never attach it to public bug reports.
 
@@ -39,7 +39,7 @@ Use Windows **Settings → Apps → Installed apps → Sapphire → Uninstall**,
 
 | Symptom | Check |
 | --- | --- |
-| No visible window | Tray/hidden icons → Show; startup is intentionally hidden |
+| No visible window | Tray/hidden icons → Show; Windows sign-in launch is intentionally hidden |
 | Shortcut fails | Another application may own it; change it in Settings |
 | Native feature unavailable | Use Electron, preserve the full directory, check hardware and Windows permissions |
 | Network feature fails | Location, key, account entitlement, connection, and visible provider error |
@@ -47,3 +47,5 @@ Use Windows **Settings → Apps → Installed apps → Sapphire → Uninstall**,
 | Wrong monitor/position | Re-select the display and report resolution/scaling |
 
 Report app/Windows versions, architecture, steps, and redacted errors/screenshots. Do not share profiles or credentials.
+
+Check **Settings → About** for the installed version. **Download latest version** opens this repository’s releases; **View source** opens its code. Installing a release is still a manual step.

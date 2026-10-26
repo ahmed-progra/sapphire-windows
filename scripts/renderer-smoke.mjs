@@ -55,19 +55,30 @@ export async function runRendererSmoke(window) {
       const rootBackground = getComputedStyle(document.getElementById('root')).backgroundColor;
       if (!['rgba(0, 0, 0, 0)', 'transparent'].includes(rootBackground)) throw new Error('Desktop renderer root is opaque.');
       for (const [id, selector] of routes) {
+        if (!document.getElementById('tab-' + id)) { document.getElementById('all-tools-toggle').click(); await waitFor(() => document.getElementById('tab-' + id), 'tool picker'); }
         const tab = document.getElementById('tab-' + id);
         if (!tab) throw new Error('Missing widget tab: ' + id);
         tab.click();
-        await waitFor(() => tab.getAttribute('aria-selected') === 'true' && document.getElementById('notch-widget-panel')?.getAttribute('aria-labelledby') === 'tab-' + id && document.querySelector(selector), id);
+        await waitFor(() => document.getElementById('notch-widget-panel')?.getAttribute('aria-labelledby') === 'active-widget-title' && document.querySelector(selector), id);
         // Allow effect subscriptions to run: a denied event topic throws here.
         await new Promise(resolve => setTimeout(resolve, 150));
         if (failures.length) throw new Error(failures.join('; '));
         results.push({ id, selected: true, widgetMounted: true });
       }
+      document.getElementById('all-tools-toggle').click();
+      await waitFor(()=>document.getElementById('all-tools-picker'),'picker opened');
+      document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+      await waitFor(()=>!document.getElementById('all-tools-picker')&&document.activeElement?.id==='all-tools-toggle','picker focus restoration');
+      if(!document.querySelector('.notch-expanded'))throw new Error('Picker Escape also collapsed Sapphire.');
+      for(const section of ['appearance','desktop','privacy','connections','about']){
+       document.getElementById('settings-nav-'+section).click();
+       await waitFor(()=>!document.getElementById('settings-panel-'+section).hidden,'Settings '+section);
+      }
+      if(!document.getElementById('settings-panel-about').textContent.includes('1.2.0'))throw new Error('Installed version missing from About.');
       document.getElementById('tab-media').focus();
       document.getElementById('tab-media').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
-      await waitFor(() => document.activeElement?.id === 'tab-audio', 'arrow-key navigation');
-      const keyboard = { arrowNavigation: true, escapeCollapse: false };
+      await waitFor(() => document.activeElement?.id === 'tab-notes', 'arrow-key navigation');
+      const keyboard = { arrowNavigation: true, pickerEscapeAndFocus: true, settingsSections: 5, escapeCollapse: false };
       globalThis.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
       await waitFor(() => document.querySelector('.notch-idle-open') && !document.querySelector('[role="tablist"]'), 'Escape collapse');
       keyboard.escapeCollapse = true;

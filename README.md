@@ -7,7 +7,7 @@
   <a href="LICENSE"><img alt="License: AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-blue"></a>
   <img alt="Platform: Windows x64" src="https://img.shields.io/badge/platform-Windows%20x64-0078d4">
 </p>
-<p align="center"><a href="https://github.com/ahmed-progra/sapphire-windows/releases/latest"><strong>Download V1</strong></a> · <a href="docs/INSTALL.md">Installation</a> · <a href="docs/FEATURES.md">Features</a> · <a href="CONTRIBUTING.md">Contributing</a></p>
+<p align="center"><a href="https://github.com/ahmed-progra/sapphire-windows/releases/latest"><strong>Download Sapphire</strong></a> · <a href="docs/INSTALL.md">Installation</a> · <a href="docs/FEATURES.md">Features</a> · <a href="CONTRIBUTING.md">Contributing</a></p>
 
 Sapphire is a community Windows adaptation of [Sapphire by Shariq Charolia](https://github.com/cshariq/Sapphire). It brings a compact, expandable productivity panel to the top of your desktop, with a tray menu and configurable keyboard shortcuts. This repository is independent of the upstream author.
 
@@ -16,18 +16,20 @@ Sapphire is a community Windows adaptation of [Sapphire by Shariq Charolia](http
 **Windows 11 x64 is recommended.** The minimum native OS target is Windows 10 build 19041; minimum-version and ARM64 compatibility are not qualified. Downloaded builds include the runtime: no Node.js or .NET SDK is needed.
 
 1. Open the [latest release](https://github.com/ahmed-progra/sapphire-windows/releases/latest).
-2. Run **`Sapphire-1.1.0-win-x64-Setup.exe`**, or extract the entire ZIP and open `Sapphire.exe`.
-3. Sapphire starts in the notification area. Click its tray icon or press **Ctrl+Shift+S** to show it. Hover to expand; use the tray menu to quit.
+2. Run **`Sapphire-1.2.0-win-x64-Setup.exe`**, or extract the entire ZIP and open `Sapphire.exe`.
+3. Sapphire opens with a short appearance introduction. Choose a theme in **Settings → Appearance**. Use **Ctrl+Shift+S** to show/hide it and the tray menu to quit.
 
-V1 uses version **1.1.0**, following earlier local 1.0.x builds. Binaries are **unsigned** and Windows may show an unknown-publisher warning. Verify the release origin and SHA-256 checksum; do not disable Windows security. [Installation, upgrades, and troubleshooting →](docs/INSTALL.md)
+The current release is **1.2.0**. Manual launch shows the panel; optional Windows sign-in launch stays quiet. Binaries are **unsigned** and Windows may show an unknown-publisher warning. Verify the release origin and SHA-256 checksum; do not disable Windows security. [Installation, upgrades, and troubleshooting →](docs/INSTALL.md)
 
 ## What you get
+
+Labeled Music, Notes, Focus and Files navigation keeps daily tools close. **All tools** groups every other tool; Settings always stays visible.
 
 | Midnight Obsidian | Arctic Light |
 | --- | --- |
 | ![Dark appearance settings](docs/appearance-dark.png) | ![Light appearance settings](docs/appearance-light.png) |
 
-Settings screenshots from the browser preview; native Windows controls run in the desktop app.
+Settings screenshots captured from the native 1.2.0 desktop app with a disposable profile.
 
 | Everyday tools | Desktop integration | Make it yours |
 | --- | --- | --- |

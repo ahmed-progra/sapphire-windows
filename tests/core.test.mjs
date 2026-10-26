@@ -7,6 +7,16 @@ test('settings reject unsafe bounds and preserve known preferences',()=>{
   assert.throws(()=>settings({hotkey:'Alt+F4;calc'}));assert.throws(()=>settings({startOnBoot:'yes'}));
   assert.equal(settings({...defaultSettings,anything:'secret'}).anything,undefined);
 });
+test('appearance introduction migrates old settings without changing data or an existing choice',()=>{
+  for(const legacy of [{hotkey:'Ctrl+Alt+N',accentColor:'#123456'},{theme:'paper',appearanceIntroSeen:false}]){
+    const migrated=settings(legacy);assert.equal(migrated.appearanceIntroSeen,false);
+    const saved=settings({...migrated,appearanceIntroSeen:true});assert.equal(saved.appearanceIntroSeen,true);
+    assert.equal(saved.theme,migrated.theme);assert.equal(saved.hotkey,migrated.hotkey);
+    const backup=importData({format:'sapphire-desktop',version:1,data:{sapphire_settings:saved,sapphire_quick_notes:'Keep this note\nعربي'}});
+    assert.equal(backup.sapphire_settings.appearanceIntroSeen,true);assert.equal(backup.sapphire_quick_notes,'Keep this note\nعربي');
+  }
+  for(const value of ['true',1,null])assert.throws(()=>settings({appearanceIntroSeen:value}));
+});
 test('backup accepts legacy localStorage strings without rewriting note text',()=>{
   const data=importData({sapphire_settings:JSON.stringify({idleWidth:460}),sapphire_quick_notes:'a\n[important]',sapphire_clipboard_history:'[]'});
   assert.equal(data.sapphire_quick_notes,'a\n[important]');assert.equal(data.sapphire_settings.idleWidth,460);

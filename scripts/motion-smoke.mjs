@@ -63,7 +63,11 @@ export async function runStorageFailureSmoke(window,store){
 
 export async function runAppearanceSmoke(window, themes) {
  const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
- const evaluate = code => window.webContents.executeJavaScript(code);
+ const evaluate = async code => {
+  const result = await window.webContents.executeJavaScript('(async()=>{try{return await ('+code+')}catch(error){return {probeError:String(error.stack??error)}}})()');
+  if(result?.probeError)throw new Error(result.probeError);
+  return result;
+ };
  const original = await evaluate("(async()=> (await electronAPI.invoke('desktop.bootstrap')).settings)()");
  const topmost = window.isAlwaysOnTop();
  const save = value => evaluate(`electronAPI.invoke('settings.save',{settings:${JSON.stringify(value)}})`);
@@ -99,11 +103,12 @@ export async function runAppearanceSmoke(window, themes) {
     await pause(250);
     const preferences = (await electronAPI.invoke('desktop.bootstrap')).settings;
     if (preferences.theme !== theme.id || document.querySelector('main').dataset.theme !== theme.id || button.getAttribute('aria-pressed') !== 'true') throw new Error('Theme selection failed: ' + theme.id);
-    const tabs = [...document.querySelectorAll('[role="tab"]')];
-    for (const tab of tabs) {
-     tab.click(); await pause(40);
+    const tabs = ['media','notes','focus','fileshelf','audio','calendar','weather','clipboard','snapzones','blip','search','finance','faceid','system','settings'];
+    for (const id of tabs) {
+     if (!document.getElementById('tab-'+id)) { document.getElementById('all-tools-toggle').click(); await pause(40); }
+     document.getElementById('tab-'+id).click(); await pause(60);
      if (document.querySelector('main').dataset.theme !== theme.id) throw new Error('Navigation reset theme.');
-     if (!document.querySelector('#notch-widget-panel > *')) throw new Error('Widget missing: ' + tab.id);
+     if (!document.querySelector('#notch-widget-panel > *')) throw new Error('Widget missing: ' + id);
     }
     const style = getComputedStyle(document.querySelector('.notch-surface'));
     const control = document.querySelector('.settings-input');

@@ -1,6 +1,6 @@
 {
   "name": "sapphire-windows",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "module",
   "main": "dist-electron/desktop.mjs",
   "description": "A community Windows desktop notch for music, notes, focus, and system controls.",
@@ -19,7 +19,10 @@
     "package:msix": "npm run build:native && npm run build && node scripts/package.mjs appx",
     "preview": "vite preview",
     "package:release": "npm run build:native && npm run build && node scripts/package.mjs release",
-    "postinstall": "node node_modules/electron/install.js"
+    "postinstall": "node node_modules/electron/install.js",
+    "test:visible": "electron scripts/measure-visible.mjs candidate",
+    "test:widgets": "electron scripts/test-widgets.mjs",
+    "test:launch": "electron scripts/test-launch.mjs"
   },
   "build": {
     "appId": "tech.sapphire.windows",

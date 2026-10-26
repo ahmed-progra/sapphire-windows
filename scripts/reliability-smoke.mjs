@@ -22,10 +22,15 @@ export async function runPolicySmoke(window,{screen,place,refresh,saveSettings,g
   window.showInactive();place(700,500);assert.equal(window.isAlwaysOnTop(),false,'resize ignored disabled preference');
   saveSettings({...original,alwaysOnTop:true});window.setAlwaysOnTop(false);place(680,480);
   assert.equal(window.isAlwaysOnTop(),true,'resize lost topmost state');
+  const setBounds=window.setBounds,setShape=window.setShape;let boundsCalls=0,shapeCalls=0;
+  try{window.setBounds=function(...args){boundsCalls++;return setBounds.apply(this,args);};window.setShape=function(...args){shapeCalls++;return setShape.apply(this,args);};
+   for(let i=0;i<20;i++)place(680,480);
+   assert.equal(boundsCalls,0,'unchanged bounds reached Windows');assert.equal(shapeCalls,0,'unchanged shape reached Windows');
+  }finally{window.setBounds=setBounds;window.setShape=setShape;}
   const write=store.write;
   try{store.write=()=>{throw new Error('Owned disk failure fixture');};assert.throws(()=>saveSettings({...original,alwaysOnTop:false}),/Owned disk failure/);assert.equal(window.isAlwaysOnTop(),true);}
   finally{store.write=write;}
-  return{displayDisconnectReconnectSimulated:true,desiredSizeRestored:true,liveToggle:true,resizeRepairsTopmost:true,hiddenPreserved:true,failedSaveRollsBack:true};
+  return{displayDisconnectReconnectSimulated:true,desiredSizeRestored:true,liveToggle:true,resizeRepairsTopmost:true,hiddenPreserved:true,failedSaveRollsBack:true,duplicateBoundsAndShapesSkipped:20};
  }finally{screen.getAllDisplays=getDisplays;screen.getPrimaryDisplay=getPrimary;saveSettings(original);place(original.idleWidth,original.idleHeight);}
 }
 
@@ -52,6 +57,8 @@ export async function runRecoverySmoke({getWindow,ready,show,recreate,emit,Brows
   old=getWindow();recreate(true,false,'open-settings');
   await waitFor(()=>getWindow()!==old&&ready(),'window recreation');
   await waitFor(()=>getWindow().webContents.executeJavaScript("Boolean(document.querySelector('.notch-settings'))"),'Settings after recreation');
+  await getWindow().webContents.executeJavaScript("document.getElementById('all-tools-toggle').click()");
+  await waitFor(()=>getWindow().webContents.executeJavaScript("!!document.getElementById('tab-audio')"),'audio picker entry');
   await getWindow().webContents.executeJavaScript("document.getElementById('tab-audio').click()");
   await waitFor(()=>getWindow().webContents.executeJavaScript("Boolean(document.querySelector('section[aria-label=\"Audio mixer\"]'))"),'audio mounted');
   emit('audio',null);

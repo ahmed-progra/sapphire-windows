@@ -25,9 +25,9 @@ let window=null,tray=null,store,credentials,services,native,spotify;
 let preferences={...defaultSettings},awakeId=null,quitting=false,dialogDepth=0,hotkey=null,polling=false,lastClipboard='';
 let timer=null,lastMedia='',lastBattery='';
 let cleanupPromise=null,cleanupComplete=false;
-let suspended=false,rendererFailed=false,pendingShow=false,pendingTopic=null,trayError=null;
+let suspended=false,rendererFailed=false,pendingShow=!smoke&&!process.argv.includes('--startup'),pendingTopic=null,trayError=null;
 let pendingActivation=true,rendererReady=false,automaticRecoveryUsed=false,pendingData;
-let requestedSize=null;
+let requestedSize=null,lastShape=null;
 let soakJob=null,soakRequested=soak;
 function cleanupDesktop(){return cleanupPromise??=(async()=>{clearInterval(timer);services?.stopLive();spotify?.close();globalShortcut.unregisterAll();if(awakeId!==null){powerSaveBlocker.stop(awakeId);awakeId=null;}tray?.destroy();await native?.close();})();}
 const reminders=new Set();
@@ -42,8 +42,8 @@ function diagnostic(event,details={}){
  try{const directory=path.join(app.getPath('userData'),'diagnostics');fs.mkdirSync(directory,{recursive:true});const file=path.join(directory,'lifecycle.jsonl');if(fs.existsSync(file)&&fs.statSync(file).size>256*1024)fs.renameSync(file,file+'.previous');fs.appendFileSync(file,JSON.stringify({at:new Date().toISOString(),event,...details})+'\n');}catch{/* Diagnostics must not prevent recovery when the disk is unavailable. */}
 }
 function place(width=requestedSize?.width??preferences.idleWidth,height=requestedSize?.height??preferences.idleHeight){
- if(!window||window.isDestroyed())return;const bounds=boundsFor(chosenDisplay(),width,height,preferences.notchStyle);requestedSize={width,height};window.setBounds(bounds);applyWindowPolicy();
- const expanded=height>120;try{window.setShape(outline(bounds.width,bounds.height,expanded?40:Math.min(12,height/2),preferences.notchStyle==='floating-island'?Math.min(24,height/2):0));}catch{/* shortcut: window shapes depend on Windows, renderer pointer routing remains available. */}
+ if(!window||window.isDestroyed())return;const bounds=boundsFor(chosenDisplay(),width,height,preferences.notchStyle);requestedSize={width,height};const current=window.getBounds();if(Object.keys(bounds).some(key=>bounds[key]!==current[key]))window.setBounds(bounds);applyWindowPolicy();
+ const expanded=height>120;const shapeKey=[bounds.width,bounds.height,expanded,preferences.notchStyle].join(':');try{if(shapeKey!==lastShape){window.setShape(outline(bounds.width,bounds.height,expanded?40:Math.min(12,height/2),preferences.notchStyle==='floating-island'?Math.min(24,height/2):0));lastShape=shapeKey;}}catch{/* shortcut: window shapes depend on Windows, renderer pointer routing remains available. */}
 }
 function applyWindowPolicy(value=preferences){if(!window||window.isDestroyed())return;window.setSkipTaskbar(true);window.setAlwaysOnTop(value.alwaysOnTop,'floating');}
 function foregroundChanged(){if(!quitting&&!suspended&&!dialogDepth&&preferences.alwaysOnTop&&window&&!window.isDestroyed()&&window.isVisible()&&!window.isMinimized())applyWindowPolicy();}
@@ -80,8 +80,8 @@ function updateTray(){
 function registerHotkey(next){if(next===hotkey)return;if(!globalShortcut.register(next,toggle))throw new Error('That shortcut is already in use. Choose another shortcut.');const old=hotkey;hotkey=next;if(old)globalShortcut.unregister(old);}
 function saveSettings(value,persist=true){
  const next=settings(value),old=preferences;registerHotkey(next.hotkey);
- try{applyWindowPolicy(next);if(app.isPackaged&&!smoke&&!process.windowsStore)app.setLoginItemSettings({openAtLogin:next.startOnBoot});if(persist)store.set('sapphire_settings',next);}
- catch(error){applyWindowPolicy(old);if(app.isPackaged&&!smoke&&!process.windowsStore)app.setLoginItemSettings({openAtLogin:old.startOnBoot});if(next.hotkey!==old.hotkey){globalShortcut.unregister(next.hotkey);hotkey=null;registerHotkey(old.hotkey);}throw error;}
+ try{applyWindowPolicy(next);if(app.isPackaged&&!smoke&&!process.windowsStore)app.setLoginItemSettings({openAtLogin:next.startOnBoot,args:['--startup']});if(persist)store.set('sapphire_settings',next);}
+ catch(error){applyWindowPolicy(old);if(app.isPackaged&&!smoke&&!process.windowsStore)app.setLoginItemSettings({openAtLogin:old.startOnBoot,args:['--startup']});if(next.hotkey!==old.hotkey){globalShortcut.unregister(next.hotkey);hotkey=null;registerHotkey(old.hotkey);}throw error;}
  preferences=next;place();updateTray();if(persist)emit('settings',next);return next;
 }
 function saveShortcuts(value,persist=true){
@@ -187,7 +187,7 @@ const handlers={
 for(const method of nativeMethods)handlers[method]=async p=>{validateNative(method,p);if(method==='hello.verify')p={...p,windowHandle:handle()};const call=()=>native.call(method,p);return await(['hello.verify','notifications.access'].includes(method)?withDialog(call):call());};
 
 function createWindow(){
- rendererReady=false;requestedSize=null;
+ rendererReady=false;requestedSize=null;lastShape=null;
  const icon=path.join(root,'dist','sapphire.ico');
  window=new BrowserWindow({title:'Sapphire',...boundsFor(chosenDisplay(),preferences.idleWidth,preferences.idleHeight,preferences.notchStyle),frame:false,transparent:true,backgroundColor:'#00000000',alwaysOnTop:preferences.alwaysOnTop,skipTaskbar:true,resizable:false,hasShadow:false,show:false,icon,webPreferences:{preload:path.join(here,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true,webSecurity:true,backgroundThrottling:false}});
  window.webContents.setWindowOpenHandler(()=>({action:'deny'}));
@@ -215,7 +215,7 @@ function createWindow(){
  if(dev)window.loadURL('http://localhost:5173');else window.loadFile(path.join(root,'dist','index.html'));
  if(!tray)createTray();
 }
-app.on('second-instance',(_event,commandLine)=>{if(commandLine.includes('--soak-test')){soakRequested=true;if(window&&!window.webContents.isLoading())monitorExistingApp();return;}show();window?.restore();});
+app.on('second-instance',(_event,commandLine)=>{if(commandLine.includes('--startup'))return;if(commandLine.includes('--soak-test')){soakRequested=true;if(window&&!window.webContents.isLoading())monitorExistingApp();return;}show();window?.restore();});
 app.on('before-quit',event=>{quitting=true;if(!cleanupComplete){event.preventDefault();void cleanupDesktop().finally(()=>{cleanupComplete=true;app.quit();});}});
 app.on('window-all-closed',()=>{if(quitting)app.quit();});
 if(gotLock)app.whenReady().then(async()=>{
@@ -229,7 +229,7 @@ if(gotLock)app.whenReady().then(async()=>{
  ipcMain.handle('desktop:invoke',async(event,method,params={})=>{assertTrusted(event);if(typeof method!=='string'||!Object.hasOwn(handlers,method))throw new Error('Unknown desktop command.');object(params);if(Buffer.byteLength(JSON.stringify(params))>6*1024*1024)throw new Error('Request is too large.');return handlers[method](params);});
  ipcMain.on('desktop:drag',(event,id)=>{try{assertTrusted(event);void startDrag(id).catch(error=>emit('desktop-error',{message:error.message}));}catch{}});
  createWindow();try{registerHotkey(preferences.hotkey);}catch(error){emit('desktop-error',{message:error.message});}
- if(app.isPackaged&&!smoke&&!process.windowsStore&&preferences.startOnBoot){try{app.setLoginItemSettings({openAtLogin:true});}catch{trayError='Windows startup registration could not be refreshed. Check Startup apps in Settings.';}}
+ if(app.isPackaged&&!smoke&&!process.windowsStore&&preferences.startOnBoot){try{app.setLoginItemSettings({openAtLogin:true,args:['--startup']});}catch{trayError='Windows startup registration could not be refreshed. Check Startup apps in Settings.';}}
  try{saveShortcuts(store.get('sapphire_shortcuts')??[],false);}catch(error){emit('desktop-error',{message:error.message});}
  screen.on('display-added',refreshWindow);screen.on('display-removed',refreshWindow);screen.on('display-metrics-changed',refreshWindow);
  powerMonitor.on('suspend',()=>{suspended=true;services.stopLive();emit('ai-live-state',{state:'disconnected'});});

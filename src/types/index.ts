@@ -79,6 +79,7 @@ export interface ClipboardItem {
 }
 
 export interface IslandSettings extends Appearance {
+  appearanceIntroSeen: boolean;
   notchStyle: 'floating-island' | 'mac-notch' | 'minimal-pill';
   idleWidth: number;
   idleHeight: number;

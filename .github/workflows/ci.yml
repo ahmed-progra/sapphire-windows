@@ -25,6 +25,7 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+      - run: npm run test:widgets
       - run: npm run build:native
       - name: Package installer and ZIP
         if: github.event_name == 'workflow_dispatch'

@@ -90,7 +90,7 @@ export const IslandContainer: React.FC = () => {
     const requested = focusAfterMorph.current;
     if (!requested || requested !== modeRef.current) return;
     if (requested === 'expanded' && isEditing()) { focusAfterMorph.current = null; return; }
-    const target = requested === 'expanded' ? document.getElementById(`tab-${activeTabRef.current}`) : document.querySelector<HTMLElement>('.notch-idle-open');
+    const target = requested === 'expanded' ? (document.getElementById(`tab-${activeTabRef.current}`) ?? document.getElementById('all-tools-toggle')) : document.querySelector<HTMLElement>('.notch-idle-open');
     if (!target) return; // AnimatePresence may still be waiting to mount this view.
     target.focus({ preventScroll: true });
     if (document.activeElement === target) focusAfterMorph.current = null;
@@ -126,7 +126,7 @@ export const IslandContainer: React.FC = () => {
     api.invoke('desktop.bootstrap').then(data => {
       if (!active) return;
       hydrateDesktopStorage(data.storage ?? {});
-      if (data.settings) setSettings({ ...data.settings, ...normalizeAppearance(data.settings) });
+      if (data.settings) { setSettings({ ...data.settings, ...normalizeAppearance(data.settings) }); if (!data.settings.appearanceIntroSeen) { setActiveTab('settings'); setMode('expanded'); } }
       setTrack(data.media ?? null);
       if (data.battery) setBattery(data.battery);
       if (data.storageError) setError(data.storageError);
@@ -169,7 +169,7 @@ export const IslandContainer: React.FC = () => {
 
   useEffect(() => {
     const keyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !dialogOpen.current && !document.querySelector('[data-busy="true"]')) { event.preventDefault(); focusAfterMorph.current = 'idle'; collapse(); }
+      if (!event.defaultPrevented && event.key === 'Escape' && !dialogOpen.current && !document.querySelector('[data-busy="true"]')) { event.preventDefault(); focusAfterMorph.current = 'idle'; collapse(); }
     };
     const blur = () => { window.clearTimeout(hoverTimer.current); dragActive.current = false; focusAfterMorph.current = null; if (modeRef.current === 'expanded') scheduleCollapse(500); };
     const focus = () => clearCollapse();
@@ -213,6 +213,9 @@ export const IslandContainer: React.FC = () => {
         transition={reducedMotion ? { duration: 0 } : motionTiming.morph}
         onAnimationComplete={() => {
           const bounds = boundsRef.current;
+          const visible = surfaceRef.current?.getBoundingClientRect();
+          // Ignore completion from an interrupted target until the current surface has settled.
+          if (visible && (Math.abs(visible.width - Math.min(bounds.width, innerWidth)) > 1 || Math.abs(visible.height - Math.min(bounds.height, innerHeight)) > 1)) return;
           resizeWindow(bounds.width, bounds.height).catch(reason => setError(String(reason)));
           restoreRequestedFocus();
         }}
@@ -252,7 +255,7 @@ export const IslandContainer: React.FC = () => {
               <HeaderNav activeTab={activeTab} onSelectTab={tab => { setActiveTab(tab); clearCollapse(); }} onCollapse={() => { focusAfterMorph.current = 'idle'; collapse(); }} />
               {!desktop && <p className="notch-preview-note">Browser preview. Open the desktop app for Windows controls.</p>}
               {error && <div className="notch-error" role="alert"><span>{error}</span><button type="button" onClick={() => setError('')} aria-label="Dismiss error">×</button></div>}
-              <motion.div key={`${activeTab}:${storageRevision}`} id="notch-widget-panel" role="tabpanel" aria-labelledby={`tab-${activeTab}`} className="notch-widget-panel" tabIndex={0} initial={reducedMotion ? false : { opacity: 0, transform: 'translateY(4px)' }} animate={{ opacity: 1, transform: 'translateY(0px)' }} transition={reducedMotion ? { duration: 0 } : contentTransition}>
+              <motion.div key={`${activeTab}:${storageRevision}`} id="notch-widget-panel" role="tabpanel" aria-labelledby="active-widget-title" className="notch-widget-panel" tabIndex={0} initial={reducedMotion ? false : { opacity: 0, transform: 'translateY(4px)' }} animate={{ opacity: 1, transform: 'translateY(0px)' }} transition={reducedMotion ? { duration: 0 } : contentTransition}>
                 {!hydrated && <div className="notch-empty" role="status"><h2>Opening your workspace</h2><p>Your saved data will appear when desktop storage is ready.</p></div>}
                 {hydrated && <WidgetErrorBoundary>
                 {activeTab === 'media' && <MediaWidget track={track} onTogglePlay={() => void mediaAction('toggle')} onNext={() => void mediaAction('next')} onPrev={() => void mediaAction('previous')} onSeek={position => void mediaAction('seek', position)} onVolumeChange={async volume => {
@@ -272,7 +275,7 @@ export const IslandContainer: React.FC = () => {
                 {activeTab === 'finance' && <FinanceSportsWidget />}
                 {activeTab === 'faceid' && <FaceIDWidget />}
                 {activeTab === 'system' && <SystemWidget />}
-                {activeTab === 'settings' && <SettingsWidget settings={settings} onUpdateSettings={updateSettings} />}
+                {activeTab === 'settings' && <SettingsWidget settings={settings} onUpdateSettings={updateSettings} onFinishIntro={() => setActiveTab('media')} />}
                 </WidgetErrorBoundary>}
               </motion.div>
               <footer className="notch-footer"><span>{isCaffeinated ? 'Stay awake is on' : 'Sapphire for Windows'}</span><span>Esc to collapse</span></footer>

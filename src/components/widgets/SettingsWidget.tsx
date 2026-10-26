@@ -7,6 +7,7 @@ import { resolveAppearance, themes } from '../../../electron/appearance.mjs';
 interface SettingsWidgetProps {
   settings: IslandSettings;
   onUpdateSettings: (settings: IslandSettings) => Promise<void> | void;
+  onFinishIntro?: () => void;
 }
 type Provider = 'gemini' | 'finnhub' | 'sports';
 const providers: { id: Provider; name: string; description: string }[] = [
@@ -15,8 +16,11 @@ const providers: { id: Provider; name: string; description: string }[] = [
   { id: 'sports', name: 'API-Sports', description: 'Live scores and sports results' },
 ];
 
-export const SettingsWidget: React.FC<SettingsWidgetProps> = ({ settings, onUpdateSettings }) => {
+export const SettingsWidget: React.FC<SettingsWidgetProps> = ({ settings, onUpdateSettings, onFinishIntro }) => {
   const api = window.electronAPI;
+  const [section, setSection] = useState('appearance');
+  const [systemReduced, setSystemReduced] = useState(() => matchMedia('(prefers-reduced-motion: reduce)').matches);
+  useEffect(() => { const query = matchMedia('(prefers-reduced-motion: reduce)'); const update = () => setSystemReduced(query.matches); query.addEventListener('change', update); return () => query.removeEventListener('change', update); }, []);
   const desktopSettings = settings as IslandSettings & { displayId?: number; clipboardEnabled?: boolean };
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
@@ -75,9 +79,12 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({ settings, onUpda
 
   return (
     <div className="notch-settings" data-busy={busy ? 'true' : undefined}>
-      <section className="settings-section" aria-labelledby="appearance-heading">
-        <div className="settings-section-heading"><h2 id="appearance-heading">Appearance</h2><span role={failed ? 'alert' : 'status'} className={`settings-status ${failed ? 'is-error' : ''}`}>{message}</span></div>
-        <p>A different atmosphere, the same workspace.</p>
+      {!settings.appearanceIntroSeen && <aside className="appearance-intro" aria-label="Welcome to your new Sapphire"><span className="intro-eyebrow">Make yourself at home</span><h2>Your workspace. Your look.</h2><p>Your notes and preferences are here. Choose a theme below, or keep your current look.</p><button className="notch-button primary" disabled={busy} onClick={() => void run(async () => { await onUpdateSettings({ ...settings, appearanceIntroSeen: true }); onFinishIntro?.(); }, '')}>Continue to Music</button></aside>}
+      <nav className="settings-navigation" aria-label="Settings sections">{['appearance', 'desktop', 'privacy', 'connections', 'about'].map(item => <button key={item} id={`settings-nav-${item}`} className={section === item ? 'is-selected' : ''} aria-pressed={section === item} aria-controls={`settings-panel-${item}`} onClick={() => { setSection(item); setMessage(''); document.querySelector('.notch-widget-panel')?.scrollTo({ top: 0 }); }}>{item[0].toUpperCase() + item.slice(1)}</button>)}</nav>
+      {message && <p role={failed ? 'alert' : 'status'} className={`settings-feedback ${failed ? 'is-error' : ''}`}>{message}</p>}
+      <section id="settings-panel-appearance" hidden={section !== 'appearance'} className="settings-section" aria-labelledby="appearance-heading">
+        <div className="settings-section-heading"><h2 id="appearance-heading">Appearance</h2><span className="settings-hint">Saved on this computer</span></div>
+        <p>Choose a look that feels at home on your desktop.</p>
         <label className="settings-row"><span>Match Windows<small>Switch between Arctic Light and Midnight Obsidian.</small></span><input className="settings-switch" role="switch" type="checkbox" checked={settings.theme === 'system'} disabled={busy} onChange={event => void update({ theme: event.target.checked ? 'system' : 'obsidian' })} /></label>
         <div className="settings-themes" role="group" aria-label="Theme">
           {themes.map(theme => {
@@ -91,7 +98,7 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({ settings, onUpda
         {settings.theme === 'custom' && <form className="settings-field" onSubmit={event => { event.preventDefault(); if (/^#[0-9a-f]{6}$/i.test(customAccent)) void update({ accentColor: customAccent }); }}>
           <label htmlFor="custom-accent">Custom accent</label><div className="settings-inline"><input type="color" aria-label="Pick accent color" value={/^#[0-9a-f]{6}$/i.test(customAccent) ? customAccent : settings.accentColor} onChange={event => setCustomAccent(event.target.value)} disabled={busy} /><input id="custom-accent" className="settings-input" value={customAccent} onChange={event => setCustomAccent(event.target.value)} pattern="#[0-9a-fA-F]{6}" maxLength={7} required spellCheck={false} disabled={busy} /><button className="notch-button" disabled={busy || !/^#[0-9a-f]{6}$/i.test(customAccent)}>Apply accent</button></div><p className="settings-hint">Text and focus colors adapt to keep your accent readable.</p>
         </form>}
-        <label className="settings-row"><span>Motion<small>Windows reduced-motion preferences are always respected.</small></span><select aria-label="Motion preference" className="settings-input" value={settings.motionPreference} disabled={busy} onChange={event => void update({ motionPreference: event.target.value as IslandSettings['motionPreference'] })}><option value="system">Follow Windows</option><option value="reduced">Reduce motion</option></select></label>
+        <label className="settings-row"><span>Motion<small>{systemReduced ? 'Windows is reducing motion. Sapphire follows this setting.' : 'Gentle transitions, or less movement when you prefer.'}</small></span><select aria-label="Motion preference" className="settings-input" value={settings.motionPreference} disabled={busy} onChange={event => void update({ motionPreference: event.target.value as IslandSettings['motionPreference'] })}><option value="system">Follow Windows</option><option value="reduced">Reduce motion</option></select></label>
         <h3 className="settings-subheading">Notch shape</h3>
         <div className="settings-styles" role="group" aria-label="Notch shape">
           {[{ id: 'mac-notch', name: 'Notch' }, { id: 'floating-island', name: 'Island' }, { id: 'minimal-pill', name: 'Pill' }].map(style => (
@@ -99,7 +106,7 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({ settings, onUpda
           ))}
         </div>
       </section>
-      <section className="settings-section" aria-labelledby="desktop-heading">
+      <section id="settings-panel-desktop" hidden={section !== 'desktop'} className="settings-section" aria-labelledby="desktop-heading">
         <h2 id="desktop-heading">Desktop</h2>
         <label className="settings-row"><span>Always on top<small>Stay above regular windows. Windows sign-in and secure prompts remain protected.</small></span><input type="checkbox" checked={settings.alwaysOnTop} disabled={busy || !api} onChange={event => void update({ alwaysOnTop: event.target.checked })} /></label>
         {startupManagedByWindows === true ? <div className="settings-row"><span>Open at sign-in<small>Windows manages this app in Startup apps.</small></span><button type="button" className="notch-button" disabled={busy || !api} onClick={() => void run(() => api!.invoke('shell.openStartupSettings'), 'Windows Startup apps opened.')}>Startup apps</button></div> : startupManagedByWindows === null ? <div className="settings-row"><span>Open at sign-in<small>Checking Windows startup controls…</small></span></div> : <label className="settings-row"><span>Open at sign-in<small>Start quietly with your Windows account.</small></span><input type="checkbox" checked={settings.startOnBoot} disabled={busy || !api} onChange={event => void update({ startOnBoot: event.target.checked })} /></label>}
@@ -107,24 +114,25 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({ settings, onUpda
         <form className="settings-row" onSubmit={event => { event.preventDefault(); void update({ hotkey: hotkey.trim() }); }}><label htmlFor="show-shortcut">Show / hide shortcut</label><div className="settings-inline"><input id="show-shortcut" className="settings-input" value={hotkey} onChange={event => setHotkey(event.target.value)} disabled={busy || !api} autoComplete="off" spellCheck={false} aria-label="Global shortcut" /><button type="submit" className="notch-button" disabled={busy || !api || !hotkey.trim()}>Apply</button></div></form>
         <form className="settings-row" onSubmit={event => { event.preventDefault(); const value = Number(collapseSeconds); if (Number.isInteger(value) && value >= 0 && value <= 300) void update({ autoCollapseSeconds: value }); else { setFailed(true); setMessage('Choose a whole number from 0 to 300 seconds.'); } }}><label htmlFor="collapse-seconds">Collapse after<small>Seconds after the pointer leaves. Use 0 to keep it open.</small></label><div className="settings-inline"><input id="collapse-seconds" className="settings-input" type="number" min="0" max="300" value={collapseSeconds} onChange={event => setCollapseSeconds(event.target.value)} disabled={busy} /><button type="submit" className="notch-button" disabled={busy}>Apply</button></div></form>
       </section>
-      <section className="settings-section" aria-labelledby="privacy-heading">
+      <section id="settings-panel-privacy" hidden={section !== 'privacy'} className="settings-section" aria-labelledby="privacy-heading">
         <h2 id="privacy-heading">Data & privacy</h2>
         <label className="settings-row"><span>Collect clipboard history<small>Text you copy is saved locally until you clear it. Leave this off for sensitive work.</small></span><input type="checkbox" checked={clipboardEnabled} disabled={busy || !api} onChange={event => { const enabled = event.target.checked; void run(async () => { await api?.invoke('clipboard.enable', { enabled }); setClipboardEnabled(enabled); }, enabled ? 'Clipboard history enabled.' : 'Clipboard collection stopped.'); }} /></label>
         <div className="settings-inline"><button type="button" className="notch-button" disabled={busy} onClick={() => void run(exportData, 'Data exported. Service keys are excluded.')}><Download size={13} className="inline mr-1.5" />Export data</button><button type="button" className="notch-button" disabled={busy || !api} onClick={() => void run(async () => api?.invoke('storage.import'), 'Data imported.')}><Upload size={13} className="inline mr-1.5" />Import data</button></div>
         <p className="settings-hint">Import or export your notes, settings, shelf, clipboard, calendar, focus, weather and action shortcuts. Original files are never moved or deleted.</p>
       </section>
-      <section className="settings-section" aria-labelledby="services-heading">
+      <section id="settings-panel-connections" hidden={section !== 'connections'} className="settings-section" aria-labelledby="services-heading">
         <h2 id="services-heading"><KeyRound size={13} className="inline mr-1.5" />Connected services</h2>
-        <p>Keys stay on this computer. Each provider's usage limits and charges apply.</p>
+        <p>Keys are protected on this computer. Saving a key does not verify your connection. Each provider's limits and charges apply.</p>
         <div className="settings-keys">{providers.map(provider => (
           <form key={provider.id} className="settings-field" onSubmit={event => { event.preventDefault(); void credential(provider.id); }}>
-            <label htmlFor={`key-${provider.id}`}>{provider.name}{configured[provider.id] && <span className="text-success ml-2 text-[10px]"><Check size={10} className="inline" /> Key saved</span>}</label>
+            <label htmlFor={`key-${provider.id}`}>{provider.name}<span className="settings-hint ml-2">{configured[provider.id] ? 'Key saved · not verified' : 'Needs setup'}</span></label>
             <span className="settings-hint">{provider.description}</span>
             <div className="settings-inline"><input id={`key-${provider.id}`} className="settings-input" type="password" value={keys[provider.id]} placeholder={configured[provider.id] ? 'Enter a replacement key' : 'Enter API key'} autoComplete="off" spellCheck={false} disabled={busy || !api} onChange={event => setKeys(current => ({ ...current, [provider.id]: event.target.value }))} /><button type="submit" className="notch-button" disabled={busy || !api || !keys[provider.id].trim()}>Save</button>{configured[provider.id] && <button type="button" className="notch-button" disabled={busy || !api} onClick={() => void credential(provider.id, true)}>Remove</button>}</div>
           </form>
         ))}</div>
       </section>
-      {api && <section className="settings-section" aria-labelledby="capabilities-heading"><h2 id="capabilities-heading"><Monitor size={13} className="inline mr-1.5" />Windows integration</h2><div className="settings-capabilities">{[{ id: 'media', label: 'Media controls' }, { id: 'audio', label: 'Audio mixer' }, { id: 'snap', label: 'Window snapping' }, { id: 'brightness', label: 'Display brightness' }, { id: 'battery', label: 'Battery' }, { id: 'bluetooth', label: 'Bluetooth' }, { id: 'hello', label: 'Windows Hello' }].map(item => <div key={item.id} title={capabilities[item.id]?.reason} className={`settings-capability ${capabilities[item.id]?.available ? 'is-available' : ''}`}><span className="capability-dot" /><span>{item.label}{capabilities[item.id]?.available ? '' : ' unavailable'}</span></div>)}</div><p>Secure lock-screen overlays, universal charge limits and driver-based audio processing are unavailable in this build.</p>{version && <p>Version {version}</p>}</section>}
+      <section id="settings-panel-about" hidden={section !== 'about'} className="settings-section" aria-labelledby="about-heading"><div className="about-identity"><img src="./sapphire-light.png" alt="" /><div><h2 id="about-heading">Sapphire for Windows</h2><p className="about-version">{version ? `Version ${version}` : 'Browser preview'}</p></div></div><p>A little space for your everyday tools.</p><div className="settings-inline">{[{ label: 'Download latest version', url: 'https://github.com/ahmed-progra/sapphire-windows/releases/latest' }, { label: 'View source', url: 'https://github.com/ahmed-progra/sapphire-windows' }].map(link => <a key={link.label} className="notch-button" href={link.url} target="_blank" rel="noopener noreferrer" onClick={event => { if (api) { event.preventDefault(); void run(() => api.invoke('shell.openExternal', { url: link.url }), ''); } }}>{link.label}</a>)}</div><p className="settings-hint">Updates open in your browser. Install the download to update this copy.</p>
+      {api && <div className="settings-section" aria-labelledby="capabilities-heading"><h2 id="capabilities-heading"><Monitor size={13} className="inline mr-1.5" />Windows integration</h2><div className="settings-capabilities">{[{ id: 'media', label: 'Media controls' }, { id: 'audio', label: 'Audio mixer' }, { id: 'snap', label: 'Window snapping' }, { id: 'brightness', label: 'Display brightness' }, { id: 'battery', label: 'Battery' }, { id: 'bluetooth', label: 'Bluetooth' }, { id: 'hello', label: 'Windows Hello' }].map(item => <div key={item.id} title={capabilities[item.id]?.reason} className={`settings-capability ${capabilities[item.id]?.available ? 'is-available' : ''}`}><span className="capability-dot" /><span>{item.label}{capabilities[item.id]?.available ? '' : ' unavailable'}</span></div>)}</div><p>Secure lock-screen overlays, universal charge limits and driver-based audio processing are unavailable in this build.</p></div>}
       <footer className="settings-attribution">
         <p>Sapphire by cshariq (Shariq Charolia) and contributors. Windows adaptation © 2026 contributors.</p>
         <p>AGPL-3.0 · No warranty. {[
@@ -136,6 +144,7 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({ settings, onUpda
           void run(() => api.invoke('shell.openExternal', { url: link.url }), '');
         }}>{link.label}</a>)}</p>
       </footer>
+      </section>
     </div>
   );
 };

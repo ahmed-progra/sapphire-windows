@@ -10,7 +10,7 @@ export const NotesWidget:React.FC=()=>{
    await saveNotes(value);
    if(current>=confirmedRevision.current){confirmedRevision.current=current;confirmedContent.current=value;}
    if(current===revision.current){setStatus('Saved on this computer');setError('');setRecovery(loadNotesRecovery());setRestored(false);}
-  }catch(e){if(current===revision.current){setStatus('Save failed — your draft is still visible');setError(messageOf(e));setRecovery(loadNotesRecovery());}}
+  }catch(e){if(current===revision.current){setStatus('Couldn’t save. Your text is still in the editor.');setError(messageOf(e));setRecovery(loadNotesRecovery());}}
   finally{if(current===revision.current)setSaving(false);}
  };
  const restore=()=>{if(!recovery)return;setContent(recovery.content);setRestored(true);setStatus('Recovered draft opened. Save restored draft to replace the current desktop notes.');};

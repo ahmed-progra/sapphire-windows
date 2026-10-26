@@ -4,7 +4,7 @@ import { appearanceDefaults, normalizeAppearance } from '../../electron/appearan
 import {discardNoteRecovery,hydrateNotes,notesKey,preserveNoteDraft,readNoteRecovery,saveNotesWithRecovery} from './noteRecovery.mjs';
 
 export const defaultSettings: IslandSettings = {
-  ...appearanceDefaults,
+  ...appearanceDefaults, appearanceIntroSeen: false,
   notchStyle: 'mac-notch', idleWidth: 150, idleHeight: 24,
   expandedWidth: 680, expandedHeight: 480, acrylicBlur: 'medium',
   autoCollapseSeconds: 8, alwaysOnTop: true,

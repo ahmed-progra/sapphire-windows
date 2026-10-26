@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.2.0 — 2026-10-26
+
+- Labeled daily navigation and grouped All tools picker, preserving all 15 tools.
+- Appearance-first Settings with five sections, all ten themes, honest connection states and installed version links.
+- Readable surfaces, consistent spacing, solid contrast/transparency fallbacks and clearer action/error copy.
+- 100 ms feedback, 160 ms content transitions, 180 ms theme settling; stale morph completions and redundant native bounds/shape calls are ignored.
+- Manual launch shows the app; Windows startup stays quiet. A durable appearance introduction preserves existing data and theme choices.
+- Clipboard clear confirmation and useful empty-search feedback. Notes save failures explicitly retain the editor text without promising unconfirmed recovery.
+- Added disposable legacy-profile launch tests, widget failure/cancellation fixtures, navigation/focus coverage and visible-window measurements.
+
+See [1.2 verification and limits](docs/VERIFICATION-1.2.md).
+
 ## 1.1.0 — V1 public release — 2026-10-26
 
 First public release of this Windows adaptation. Earlier 1.0.x packages were local builds; 1.1.0 preserves upgrade ordering.

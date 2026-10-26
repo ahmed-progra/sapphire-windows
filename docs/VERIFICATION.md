@@ -1,5 +1,7 @@
 # Release verification
 
+Current release: [1.2.0 verification and tool audit](VERIFICATION-1.2.md). The 1.1.0 results below are historical.
+
 ## V1 / 1.1.0
 
 The public release is built from its tagged source. Local automated checks and hosted CI are separate evidence; the release notes record final results and hashes.

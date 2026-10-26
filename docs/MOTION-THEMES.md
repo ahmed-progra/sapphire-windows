@@ -16,7 +16,7 @@ The current app uses React 18, Framer Motion 11, Tailwind 3 and Electron 42. The
 | Hover timers could survive window blur; touch could arm the mouse dwell. | Clear the timer on leave, blur and cancellation; arm dwell only for a mouse. | Prevents delayed opening after the interaction has ended. |
 | Exit views set `pointerEvents: none` without explicitly restoring it on reentry. | Enter/visible targets explicitly use `pointerEvents: auto`. | Makes interrupted open/close reversals deterministic. |
 | Only four button classes had pressed feedback, including disabled controls. | Shared 0.98 press scale on enabled controls, with a resting scale of exactly 1 and restoration on pointer exit. | Makes buttons, icons, theme cards and widget cards consistent without moving their layout. |
-| Springs and fades used separate inline timings; some reduced-motion content still faded. | Shared 120 ms feedback, 160 ms content easing, a damped island spring and 180 ms theme settling. Reduced motion sets component transition durations to zero and disables CSS feedback motion. | Establishes one small motion vocabulary and honors OS and app preferences. |
+| Springs and fades used separate inline timings; some reduced-motion content still faded. | Shared 100 ms feedback, 160 ms content easing, a damped island spring and 180 ms theme settling. Reduced motion sets component transition durations to zero and disables CSS feedback motion. | Establishes one small motion vocabulary and honors OS and app preferences. |
 | CSS and widgets assumed black surfaces and translucent white text. | Semantic palette tokens cover the shell, all widgets, controls, statuses, selections and scrollbars. | Supports actual light themes and readable dark themes. |
 | Frontend and desktop accent defaults differed. | Shared appearance defaults and validation. | Keeps reload, import and restart behavior consistent. |
 | A nested drag-leave cleared shelf highlighting; cancelled selection could keep drawing. | Ignore drag-leave into a descendant; clear selection on pointer cancellation/lost capture and reject secondary presses. | Prevents flicker and stale drag state. |
@@ -99,3 +99,9 @@ Updated files:
 - `src/components/widgets/WeatherWidget.tsx`
 
 The widget edits primarily replace hardcoded visual colors; Shelf and Search also receive the pointer fixes described above. No changes to provider contracts, credentials, storage keys, note recovery or native window policy were required. No commit or push was made.
+
+## 1.2 navigation and launch
+
+Daily navigation uses Music, Notes, Focus and Files. The All tools dialog groups the remaining tool IDs and handles Escape before the shell. Settings opens Appearance first and separates Desktop, Privacy, Connections and About. `appearanceIntroSeen` defaults to false for existing profiles and is persisted only after Continue succeeds. The `--startup` flag keeps sign-in quiet; manual and second-instance launches show the app. Startup registration and save rollback retain the same flag. The optional MSIX manifest also declares it using [Microsoft’s uap10:Parameters attribute](https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-desktop-extension); this release publishes NSIS and ZIP only.
+
+Native placement compares actual bounds before resizing and caches the applied shape. Policy repair still runs to preserve always-on-top behavior. Renderer completion checks the live surface against the latest target before shrinking native bounds. [1.2 measurements and limits](VERIFICATION-1.2.md).

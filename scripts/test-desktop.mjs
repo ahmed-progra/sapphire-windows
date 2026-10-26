@@ -7,7 +7,7 @@ import {once} from 'node:events';
 if(!process.env.SAPPHIRE_SMOKE_DIR)throw new Error('Run this through scripts/test-desktop.ps1 to isolate the desktop and profile.');
 const root=path.resolve(process.env.SAPPHIRE_SMOKE_DIR);
 fs.mkdirSync(path.join(root,'.smoke-profile'),{recursive:true});
-fs.writeFileSync(path.join(root,'.smoke-profile','sapphire-data.json'),JSON.stringify({format:'sapphire-desktop',version:1,data:{sapphire_settings:{hotkey:'Ctrl+Alt+Shift+S'}}}));
+fs.writeFileSync(path.join(root,'.smoke-profile','sapphire-data.json'),JSON.stringify({format:'sapphire-desktop',version:1,data:{sapphire_settings:{hotkey:'Ctrl+Alt+Shift+S',appearanceIntroSeen:true}}}));
 const executable=process.argv[2]?path.resolve(process.argv[2]):createRequire(import.meta.url)('electron');
 const sourceRuntime=!process.argv[2]||path.basename(executable).toLowerCase()==='electron.exe';
 const env={...process.env};delete env.ELECTRON_RUN_AS_NODE;

@@ -7,7 +7,7 @@ const choices=[
  {id:'open_notes',label:'Open notes',action:{name:'open_notes',args:{}}},
  {id:'open_calendar',label:'Open calendar',action:{name:'open_calendar',args:{}}},
  {id:'show_weather',label:'Show weather',action:{name:'show_weather',args:{}}},
- {id:'open_files',label:'Choose files',action:{name:'open_files',args:{}}},
+ {id:'open_files',label:'Open file shelf',action:{name:'open_files',args:{}}},
  {id:'awake',label:'Stay awake',action:{name:'set_caffeinate',args:{enabled:true}}},
  {id:'sleep',label:'Allow sleep',action:{name:'set_caffeinate',args:{enabled:false}}},
 ] satisfies {id:string;label:string;action:Action}[];

@@ -2,10 +2,11 @@
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
  xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+ xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
  xmlns:uap7="http://schemas.microsoft.com/appx/manifest/uap/windows10/7"
  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
- IgnorableNamespaces="uap uap3 uap7 desktop rescap">
+ IgnorableNamespaces="uap10 uap uap3 uap7 desktop rescap">
  <Identity Name="${identityName}" ProcessorArchitecture="${arch}" Publisher="${publisher}" Version="${version}" />
  <Properties><DisplayName>${displayName}</DisplayName><PublisherDisplayName>${publisherDisplayName}</PublisherDisplayName><Description>${description}</Description><Logo>${logo}</Logo></Properties>
  <Resources>${resourceLanguages}</Resources>
@@ -22,7 +23,7 @@
  <Applications>
   <Application Id="${applicationId}" Executable="${executable}" EntryPoint="Windows.FullTrustApplication">
    <uap:VisualElements BackgroundColor="${backgroundColor}" DisplayName="${displayName}" Square150x150Logo="${square150x150Logo}" Square44x44Logo="${square44x44Logo}" Description="${description}">${defaultTile}${splashScreen}</uap:VisualElements>
-   <Extensions><desktop:Extension Category="windows.startupTask" Executable="${executable}" EntryPoint="Windows.FullTrustApplication"><desktop:StartupTask TaskId="SapphireStartup" Enabled="false" DisplayName="${displayName}" /></desktop:Extension></Extensions>
+   <Extensions><desktop:Extension Category="windows.startupTask" uap10:Parameters="--startup" Executable="${executable}" EntryPoint="Windows.FullTrustApplication"><desktop:StartupTask TaskId="SapphireStartup" Enabled="false" DisplayName="${displayName}" /></desktop:Extension></Extensions>
   </Application>
  </Applications>
 </Package>
