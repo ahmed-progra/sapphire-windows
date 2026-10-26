@@ -259,9 +259,9 @@ if(gotLock)app.whenReady().then(async()=>{
    console.log('SAPPHIRE_STACKING '+JSON.stringify(runtime.stacking));
    if(!runtime.sandbox||!runtime.hasTray||!runtime.hotkey)throw new Error('Desktop host smoke checks failed.');
    show();window.focus();const {runRendererSmoke}=await import(pathToFileURL(path.join(root,'scripts','renderer-smoke.mjs')).href);runtime.renderer=await runRendererSmoke(window);
-   const {runMotionSmoke,runStorageFailureSmoke,runAppearanceSmoke}=await import(pathToFileURL(path.join(root,'scripts','motion-smoke.mjs')).href);
+   const {runMotionSmoke,runStorageFailureSmoke,runAppearanceSmoke,runDismissalSmoke}=await import(pathToFileURL(path.join(root,'scripts','motion-smoke.mjs')).href);
    runtime.motion=await runMotionSmoke(window);runtime.storageFailure=await runStorageFailureSmoke(window,store);
-   runtime.appearance=await runAppearanceSmoke(window,themes);
+   runtime.appearance=await runAppearanceSmoke(window,themes);runtime.dismissal=await runDismissalSmoke(window);
    const boundary=await window.webContents.executeJavaScript("(async()=>{let rejected=0;for(const [method,params]of [['shell.exec',{}],['audio.volume',{id:'invalid',volume:2}],['ai.action',{action:{name:'constructor'}}]])try{await window.electronAPI.invoke(method,params);}catch{rejected++;}return rejected;})()");if(boundary!==3)throw new Error('Renderer command validation failed.');runtime.invalidCommandsRejected=boundary;
    runtime.recovery=await runRecoverySmoke({getWindow:()=>window,ready:()=>rendererReady,show,recreate:recreateWindow,emit,BrowserWindow});
    const fixture=path.join(smokeOutput,'shelf-fixture.txt');fs.writeFileSync(fixture,'Sapphire smoke fixture');const files=addFiles([fixture]);if(!files.some(f=>f.path===fixture&&!f.missing))throw new Error('File shelf persistence failed.');runtime.fileReference=true;

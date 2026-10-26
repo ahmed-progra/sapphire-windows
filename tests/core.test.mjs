@@ -62,3 +62,5 @@ test('file opening cannot launch scripts, shortcuts or installers through the do
  assert.equal(documentPath('C:\\Documents\\note.txt'),'C:\\Documents\\note.txt');assert.throws(()=>documentPath('relative.txt'));
  for(const extension of ['exe','cmd','ps1','hta','wsf','cpl','appref-ms','msix','py','lnk'])assert.throws(()=>documentPath('C:\\Downloads\\file.'+extension));
 });
+
+test('pointer-leave default is two seconds without overwriting an explicit timeout',()=>{assert.equal(settings({}).autoCollapseSeconds,2);assert.equal(settings({autoCollapseSeconds:0}).autoCollapseSeconds,0);assert.equal(settings({autoCollapseSeconds:8}).autoCollapseSeconds,8);});

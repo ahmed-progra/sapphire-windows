@@ -225,3 +225,9 @@ input[type="color"] { width: 34px; height: 34px; padding: 3px; border: 1px solid
 @media (max-width: 540px) { .notch-header { padding-left: 14px; padding-right: 14px; } .notch-tab { flex: 1; padding: 0 5px; gap: 4px; font-size: 11px; } .notch-navigation { gap: 7px; } .notch-tabs { gap: 2px; } .notch-tools-toggle { padding: 0 7px; font-size: 11px; gap: 4px; } .notch-tools-toggle > svg:last-child { display: none; } .notch-settings, .notch-widget-panel > section { padding-left: 16px; padding-right: 16px; } .tools-picker { left: 14px; right: 14px; } .settings-capabilities { grid-template-columns: 1fr; } }
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) { .notch-header, .tools-picker { background: var(--surface); box-shadow: none; } .notch-surface { border: 1px solid var(--text); } }
 @media (forced-colors: active) { .notch-surface, .notch-header, .tools-picker, .appearance-intro, .settings-navigation { background: Canvas; color: CanvasText; border: 1px solid CanvasText; box-shadow: none; } :is(button, input, select, textarea, a) { forced-color-adjust: auto; } :is(.is-selected, [aria-pressed="true"]) { outline: 2px solid Highlight; outline-offset: -2px; } .theme-preview { forced-color-adjust: none; } }
+
+/* Pointer menus have a short anchored entrance; keyboard actions are immediate. */
+.tools-picker { transform-origin: top right; transition: opacity 140ms var(--motion-ease), transform 140ms var(--motion-ease); }
+@starting-style { .tools-picker { opacity: 0; transform: translateY(-3px) scale(.98); } }
+[data-instant-interaction="true"] *, [data-instant-interaction="true"] *::before, [data-instant-interaction="true"] *::after { animation: none !important; transition-duration: 0s !important; }
+[data-instant-interaction="true"] :is(button, button:active) { scale: 1; }

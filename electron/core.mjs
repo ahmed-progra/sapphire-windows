@@ -2,7 +2,7 @@ import path from 'node:path';
 import { appearanceDefaults, normalizeAppearance } from './appearance.mjs';
 
 export const storageKeys = new Set(['sapphire_settings', 'sapphire_stashed_files', 'sapphire_quick_notes', 'sapphire_clipboard_history', 'sapphire_calendar', 'sapphire_focus', 'sapphire_weather', 'sapphire_shortcuts']);
-export const defaultSettings = Object.freeze({...appearanceDefaults,appearanceIntroSeen:false,notchStyle:'mac-notch',idleWidth:150,idleHeight:24,expandedWidth:680,expandedHeight:480,acrylicBlur:'medium',autoCollapseSeconds:8,alwaysOnTop:true,startOnBoot:false,hotkey:'Ctrl+Shift+S',clipboardEnabled:false});
+export const defaultSettings = Object.freeze({...appearanceDefaults,appearanceIntroSeen:false,notchStyle:'mac-notch',idleWidth:150,idleHeight:24,expandedWidth:680,expandedHeight:480,acrylicBlur:'medium',autoCollapseSeconds:2,alwaysOnTop:true,startOnBoot:false,hotkey:'Ctrl+Shift+S',clipboardEnabled:false});
 export function object(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Expected an object.');
   return value;

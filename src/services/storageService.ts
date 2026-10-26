@@ -7,7 +7,7 @@ export const defaultSettings: IslandSettings = {
   ...appearanceDefaults, appearanceIntroSeen: false,
   notchStyle: 'mac-notch', idleWidth: 150, idleHeight: 24,
   expandedWidth: 680, expandedHeight: 480, acrylicBlur: 'medium',
-  autoCollapseSeconds: 8, alwaysOnTop: true,
+  autoCollapseSeconds: 2, alwaysOnTop: true,
   startOnBoot: false, hotkey: 'Ctrl+Shift+S',
 };
 export const storageKeys = ['sapphire_settings', 'sapphire_stashed_files', 'sapphire_quick_notes', 'sapphire_clipboard_history', 'sapphire_calendar', 'sapphire_focus', 'sapphire_weather', 'sapphire_shortcuts'] as const;

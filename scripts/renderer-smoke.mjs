@@ -67,6 +67,11 @@ export async function runRendererSmoke(window) {
       }
       document.getElementById('all-tools-toggle').click();
       await waitFor(()=>document.getElementById('all-tools-picker'),'picker opened');
+      for (const key of ['End', 'Home']) {
+        document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key,bubbles:true}));
+        const choices = document.querySelectorAll('#all-tools-picker button');
+        if (document.activeElement !== choices[key === 'Home' ? 0 : choices.length - 1]) throw new Error('Picker ' + key + ' navigation failed');
+      }
       document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
       await waitFor(()=>!document.getElementById('all-tools-picker')&&document.activeElement?.id==='all-tools-toggle','picker focus restoration');
       if(!document.querySelector('.notch-expanded'))throw new Error('Picker Escape also collapsed Sapphire.');
@@ -74,7 +79,7 @@ export async function runRendererSmoke(window) {
        document.getElementById('settings-nav-'+section).click();
        await waitFor(()=>!document.getElementById('settings-panel-'+section).hidden,'Settings '+section);
       }
-      if(!document.getElementById('settings-panel-about').textContent.includes('1.2.0'))throw new Error('Installed version missing from About.');
+      if(!document.getElementById('settings-panel-about').textContent.includes((await window.electronAPI.invoke('desktop.bootstrap')).version))throw new Error('Installed version missing from About.');
       document.getElementById('tab-media').focus();
       document.getElementById('tab-media').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
       await waitFor(() => document.activeElement?.id === 'tab-notes', 'arrow-key navigation');

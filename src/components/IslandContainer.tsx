@@ -47,9 +47,14 @@ export const IslandContainer: React.FC = () => {
   const focusAfterMorph = useRef<'expanded' | 'idle' | null>(null);
   const focusFrame = useRef<number>();
   const dragActive = useRef(false);
+  const pointerInside = useRef(false);
+  const pointerPressed = useRef(false);
+  const keyboardActive = useRef(false);
+  const [instantInteraction, setInstantInteraction] = useState(false);
   const [systemReducedMotion, setSystemReducedMotion] = useState(() => matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [systemDark, setSystemDark] = useState(() => matchMedia('(prefers-color-scheme: dark)').matches);
   const reducedMotion = systemReducedMotion || settings.motionPreference === 'reduced';
+  const skipMotion = reducedMotion || instantInteraction;
   const appearance = useMemo(() => resolveAppearance(settings, systemDark), [settings.theme, settings.accentColor, systemDark]);
   const surfaceRef = useRef<HTMLDivElement>(null);
   const previousAppearance = useRef(appearance);
@@ -60,11 +65,11 @@ export const IslandContainer: React.FC = () => {
     if (!surface || !changed || !hydrated) return;
     // Apply the complete palette at once; a short fade avoids unreadable color interpolation.
     surface.classList.add('is-switching-theme');
-    if (reducedMotion) { surface.classList.remove('is-switching-theme'); return; }
+    if (skipMotion) { surface.classList.remove('is-switching-theme'); return; }
     const animation = surface.animate([{ opacity: .94 }, { opacity: 1 }], { duration: motionTiming.theme, easing: 'ease-out' });
     animation.finished.then(() => surface.classList.remove('is-switching-theme')).catch(() => {});
     return () => { animation.cancel(); surface.classList.remove('is-switching-theme'); };
-  }, [appearance, hydrated, reducedMotion]);
+  }, [appearance, hydrated, skipMotion]);
   useEffect(() => {
     const query = matchMedia('(prefers-reduced-motion: reduce)');
     const colorQuery = matchMedia('(prefers-color-scheme: dark)');
@@ -96,21 +101,26 @@ export const IslandContainer: React.FC = () => {
     if (document.activeElement === target) focusAfterMorph.current = null;
   }, []);
 
-  const clearCollapse = useCallback(() => window.clearTimeout(collapseTimer.current), []);
+  const clearCollapse = useCallback(() => { window.clearTimeout(collapseTimer.current); collapseTimer.current = undefined; }, []);
   const collapse = useCallback(() => {
     window.clearTimeout(hoverTimer.current);
     clearCollapse();
     setMode('idle');
   }, [clearCollapse]);
-  const scheduleCollapse = useCallback((delay?: number): void => {
+  const scheduleCollapse = useCallback((): void => {
     clearCollapse();
-    if (!settings.autoCollapseSeconds) return;
+    if (!settings.autoCollapseSeconds || pointerInside.current || modeRef.current !== 'expanded') return;
     collapseTimer.current = window.setTimeout(() => {
-      if (isEditing() || (document.hasFocus() && document.querySelector('.notch-expanded :focus-visible')) || dragActive.current || dialogOpen.current) return scheduleCollapse(delay);
+      collapseTimer.current = undefined;
+      if (pointerInside.current) return;
+      if ((keyboardActive.current && document.hasFocus()) || pointerPressed.current || dragActive.current || dialogOpen.current || document.querySelector('[data-busy="true"], [data-keep-open="true"]')) return scheduleCollapse();
       collapse();
-    }, delay ?? settings.autoCollapseSeconds * 1000);
+    }, settings.autoCollapseSeconds * 1000);
   }, [clearCollapse, collapse, settings.autoCollapseSeconds]);
+  const scheduleRef = useRef(scheduleCollapse);
+  scheduleRef.current = scheduleCollapse;
   const expand = useCallback((focus = false) => {
+    keyboardActive.current = focus; setInstantInteraction(focus);
     window.clearTimeout(hoverTimer.current);
     clearCollapse();
     setBanner(null);
@@ -140,7 +150,7 @@ export const IslandContainer: React.FC = () => {
       api.onDesktopEvent('caffeinate', setIsCaffeinated),
       api.onDesktopEvent('open-settings', () => { setActiveTab('settings'); expand(true); }),
       api.onDesktopEvent('collapse', () => { if (!isEditing() && !dragActive.current && !dialogOpen.current) collapse(); }),
-      api.onDesktopEvent('dialog-state', value => { dialogOpen.current = Boolean(value); if (value) clearCollapse(); }),
+      api.onDesktopEvent('dialog-state', value => { dialogOpen.current = Boolean(value); if (value) clearCollapse(); else scheduleRef.current(); }),
       api.onDesktopEvent('storage', value => {
         try { hydrateDesktopStorage(value ?? {}); setHydrated(true); setStorageRevision(revision => revision + 1); }
         catch (reason) { setError(reason instanceof Error ? reason.message : String(reason)); }
@@ -163,20 +173,27 @@ export const IslandContainer: React.FC = () => {
   }, [clearCollapse, collapse, expand]);
 
   useEffect(() => {
-    // Expand the native surface first; shrinking waits until the morph finishes.
-    if (mode !== 'idle') resizeWindow(width, height).catch(reason => setError(String(reason)));
-  }, [width, height, mode]);
+    // Instant transitions have no morph completion to wait for.
+    if (mode !== 'idle' || skipMotion) resizeWindow(width, height).then(() => window.electronAPI?.invoke('shell.setInteractive', { interactive: true })).catch(reason => setError(String(reason)));
+    // Native shapes handle settled corners; only the shrinking empty area needs click-through.
+    else if (!pointerInside.current && (innerWidth > width + 1 || innerHeight > height + 1)) window.electronAPI?.invoke('shell.setInteractive', { interactive: false }).catch(() => {});
+  }, [width, height, mode, skipMotion]);
 
   useEffect(() => {
+    const keyInput = () => { keyboardActive.current = true; setInstantInteraction(true); clearCollapse(); };
     const keyDown = (event: KeyboardEvent) => {
       if (!event.defaultPrevented && event.key === 'Escape' && !dialogOpen.current && !document.querySelector('[data-busy="true"]')) { event.preventDefault(); focusAfterMorph.current = 'idle'; collapse(); }
     };
-    const blur = () => { window.clearTimeout(hoverTimer.current); dragActive.current = false; focusAfterMorph.current = null; if (modeRef.current === 'expanded') scheduleCollapse(500); };
-    const focus = () => clearCollapse();
+    const blur = () => { window.clearTimeout(hoverTimer.current); pointerInside.current = false; pointerPressed.current = false; keyboardActive.current = false; dragActive.current = false; focusAfterMorph.current = null; setInstantInteraction(false); if (collapseTimer.current === undefined) scheduleCollapse(); };
+    const release = () => { pointerPressed.current = false; if (!pointerInside.current) scheduleCollapse(); };
+    const focus = () => { if (pointerInside.current || keyboardActive.current) clearCollapse(); };
+    window.addEventListener('keydown', keyInput, true);
+    window.addEventListener('pointerup', release);
+    window.addEventListener('pointercancel', release);
     window.addEventListener('keydown', keyDown);
     window.addEventListener('blur', blur);
     window.addEventListener('focus', focus);
-    return () => { window.removeEventListener('keydown', keyDown); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); };
+    return () => { window.removeEventListener('keydown', keyInput, true); window.removeEventListener('pointerup', release); window.removeEventListener('pointercancel', release); window.removeEventListener('keydown', keyDown); window.removeEventListener('blur', blur); window.removeEventListener('focus', focus); };
   }, [collapse, scheduleCollapse, clearCollapse]);
 
   useEffect(() => () => {
@@ -203,35 +220,38 @@ export const IslandContainer: React.FC = () => {
   const interactive = (value: boolean) => { window.electronAPI?.invoke('shell.setInteractive', { interactive: value }).catch(() => {}); };
 
   return (
-    <main className="notch-stage" data-theme={appearance.id} data-scheme={appearance.scheme} data-reduced-motion={reducedMotion} style={{ ...appearance.tokens, colorScheme: appearance.scheme, '--motion-feedback': `${motionTiming.feedback}ms`, '--motion-content': `${motionTiming.content}ms`, '--motion-ease': `cubic-bezier(${motionTiming.ease.join(',')})`, '--expanded-width': `${settings.expandedWidth}px`, '--expanded-height': `${settings.expandedHeight}px` } as React.CSSProperties}>
+    <main className="notch-stage" data-theme={appearance.id} data-scheme={appearance.scheme} data-reduced-motion={reducedMotion} data-instant-interaction={instantInteraction} style={{ ...appearance.tokens, colorScheme: appearance.scheme, '--motion-feedback': `${motionTiming.feedback}ms`, '--motion-content': `${motionTiming.content}ms`, '--motion-ease': `cubic-bezier(${motionTiming.ease.join(',')})`, '--expanded-width': `${settings.expandedWidth}px`, '--expanded-height': `${settings.expandedHeight}px` } as React.CSSProperties}>
       <motion.div
         ref={surfaceRef}
         style={{ visibility: hydrated || error ? 'visible' : 'hidden' }}
         className={`notch-surface ${expanded ? 'is-expanded' : ''} ${settings.notchStyle === 'mac-notch' ? 'is-anchored' : ''}`}
         initial={false}
         animate={{ width, height, borderRadius: settings.notchStyle === 'mac-notch' ? (expanded ? '0px 0px 40px 40px' : '0px 0px 14px 14px') : expanded ? '40px' : '22px' }}
-        transition={reducedMotion ? { duration: 0 } : motionTiming.morph}
+        transition={skipMotion ? { duration: 0 } : motionTiming.morph}
         onAnimationComplete={() => {
           const bounds = boundsRef.current;
           const visible = surfaceRef.current?.getBoundingClientRect();
           // Ignore completion from an interrupted target until the current surface has settled.
           if (visible && (Math.abs(visible.width - Math.min(bounds.width, innerWidth)) > 1 || Math.abs(visible.height - Math.min(bounds.height, innerHeight)) > 1)) return;
-          resizeWindow(bounds.width, bounds.height).catch(reason => setError(String(reason)));
+          resizeWindow(bounds.width, bounds.height).then(() => window.electronAPI?.invoke('shell.setInteractive', { interactive: true })).catch(reason => setError(String(reason)));
           restoreRequestedFocus();
         }}
         onPointerEnter={event => {
-          interactive(true); clearCollapse();
+          pointerInside.current = true; keyboardActive.current = false; interactive(true); clearCollapse();
           window.clearTimeout(hoverTimer.current);
           if (event.pointerType === 'mouse' && modeRef.current === 'idle') hoverTimer.current = window.setTimeout(() => expand(), 300);
         }}
         onPointerLeave={() => {
+          pointerInside.current = false; keyboardActive.current = false; setInstantInteraction(false);
           window.clearTimeout(hoverTimer.current);
-          if (!dragActive.current) interactive(false);
           if (modeRef.current === 'expanded') scheduleCollapse();
         }}
+        onPointerMove={() => { keyboardActive.current = false; if (instantInteraction) setInstantInteraction(false); }}
+        onPointerDownCapture={() => { pointerPressed.current = true; keyboardActive.current = false; setInstantInteraction(false); clearCollapse(); }}
+        onClickCapture={event => { keyboardActive.current = event.detail === 0; setInstantInteraction(event.detail === 0); }}
         onPointerCancel={() => { window.clearTimeout(hoverTimer.current); dragActive.current = false; }}
-        onFocusCapture={() => { interactive(true); clearCollapse(); }}
-        onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) scheduleCollapse(); }}
+        onFocusCapture={() => { interactive(true); if (pointerInside.current || keyboardActive.current) clearCollapse(); }}
+        onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node) && collapseTimer.current === undefined) scheduleCollapse(); }}
         onDragEnter={() => { dragActive.current = true; setActiveTab('fileshelf'); expand(); }}
         onDragOver={event => { event.preventDefault(); clearCollapse(); }}
         onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) { dragActive.current = false; scheduleCollapse(); } }}
@@ -247,15 +267,15 @@ export const IslandContainer: React.FC = () => {
       >
         <AnimatePresence initial={false} mode="sync">
           {!expanded ? (
-            <motion.div key="idle" className="notch-idle-view" initial={{ opacity: 0 }} animate={{ opacity: 1, pointerEvents: 'auto' }} exit={{ opacity: 0, pointerEvents: 'none' }} transition={reducedMotion ? { duration: 0 } : contentTransition} onAnimationComplete={restoreRequestedFocus}>
+            <motion.div key="idle" className="notch-idle-view" initial={{ opacity: 0 }} animate={{ opacity: 1, pointerEvents: 'auto' }} exit={{ opacity: 0, pointerEvents: 'none' }} transition={skipMotion ? { duration: 0 } : contentTransition} onAnimationComplete={restoreRequestedFocus}>
               <PillIdle track={track} battery={battery} banner={compact ? banner : null} isCaffeinated={isCaffeinated} onExpand={expand} onTogglePlay={event => { event.stopPropagation(); void mediaAction('toggle'); }} />
             </motion.div>
           ) : (
-            <motion.div key="expanded" className="notch-expanded" initial={{ opacity: 0 }} animate={{ opacity: 1, pointerEvents: 'auto' }} exit={{ opacity: 0, pointerEvents: 'none' }} transition={reducedMotion ? { duration: 0 } : contentTransition} onAnimationComplete={restoreRequestedFocus}>
+            <motion.div key="expanded" className="notch-expanded" initial={{ opacity: 0 }} animate={{ opacity: 1, pointerEvents: 'auto' }} exit={{ opacity: 0, pointerEvents: 'none' }} transition={skipMotion ? { duration: 0 } : contentTransition} onAnimationComplete={restoreRequestedFocus}>
               <HeaderNav activeTab={activeTab} onSelectTab={tab => { setActiveTab(tab); clearCollapse(); }} onCollapse={() => { focusAfterMorph.current = 'idle'; collapse(); }} />
               {!desktop && <p className="notch-preview-note">Browser preview. Open the desktop app for Windows controls.</p>}
               {error && <div className="notch-error" role="alert"><span>{error}</span><button type="button" onClick={() => setError('')} aria-label="Dismiss error">×</button></div>}
-              <motion.div key={`${activeTab}:${storageRevision}`} id="notch-widget-panel" role="tabpanel" aria-labelledby="active-widget-title" className="notch-widget-panel" tabIndex={0} initial={reducedMotion ? false : { opacity: 0, transform: 'translateY(4px)' }} animate={{ opacity: 1, transform: 'translateY(0px)' }} transition={reducedMotion ? { duration: 0 } : contentTransition}>
+              <motion.div key={`${activeTab}:${storageRevision}`} id="notch-widget-panel" role="tabpanel" aria-labelledby="active-widget-title" className="notch-widget-panel" tabIndex={0} initial={skipMotion ? false : { opacity: 0, transform: 'translateY(4px)' }} animate={{ opacity: 1, transform: 'translateY(0px)' }} transition={skipMotion ? { duration: 0 } : contentTransition}>
                 {!hydrated && <div className="notch-empty" role="status"><h2>Opening your workspace</h2><p>Your saved data will appear when desktop storage is ready.</p></div>}
                 {hydrated && <WidgetErrorBoundary>
                 {activeTab === 'media' && <MediaWidget track={track} onTogglePlay={() => void mediaAction('toggle')} onNext={() => void mediaAction('next')} onPrev={() => void mediaAction('previous')} onSeek={position => void mediaAction('seek', position)} onVolumeChange={async volume => {

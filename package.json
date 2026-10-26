@@ -1,6 +1,6 @@
 {
   "name": "sapphire-windows",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "type": "module",
   "main": "dist-electron/desktop.mjs",
   "description": "A community Windows desktop notch for music, notes, focus, and system controls.",

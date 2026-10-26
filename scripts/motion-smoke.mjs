@@ -4,8 +4,8 @@ export async function runMotionSmoke(window){
  const probe=async function(reduced=false){
   const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   const surface=()=>document.querySelector('.notch-surface');
-  const open=()=>document.querySelector('.notch-idle-open')?.click();
-  const close=()=>globalThis.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+  const open=()=>document.querySelector('.notch-idle-open')?.dispatchEvent(new MouseEvent('click',{bubbles:true,detail:1}));
+  const close=()=>document.querySelector('button[aria-label="Collapse notch"]')?.dispatchEvent(new MouseEvent('click',{bubbles:true,detail:1}));
   const prefs=(await globalThis.electronAPI.invoke('desktop.bootstrap')).settings;
   await globalThis.electronAPI.invoke('settings.save',{settings:{...prefs,autoCollapseSeconds:0}});
   close();await pause(750);
@@ -141,11 +141,11 @@ export async function runAppearanceSmoke(window, themes) {
   }
   await save({ ...original, autoCollapseSeconds: 1 });
   window.focus();
+  window.webContents.sendInputEvent({ type: 'mouseLeave', x: -1, y: -1 });
   window.webContents.sendInputEvent({ type: 'keyDown', keyCode: 'Tab' });
   window.webContents.sendInputEvent({ type: 'keyUp', keyCode: 'Tab' });
   await evaluate("document.getElementById('tab-settings').focus()");
   assert.equal(await evaluate("document.hasFocus() && document.getElementById('tab-settings').matches(':focus-visible')"), true);
-  window.webContents.sendInputEvent({ type: 'mouseLeave', x: -1, y: -1 });
   await pause(1150);
   assert.equal(await evaluate("!!document.querySelector('.notch-surface.is-expanded')"), true, 'Auto-collapse interrupted keyboard navigation.');
   await save({ ...original, theme: 'custom', accentColor: '#000000', motionPreference: 'reduced', autoCollapseSeconds: 0 });
@@ -166,4 +166,33 @@ export async function runAppearanceSmoke(window, themes) {
   window.webContents.debugger.detach();
   window.webContents.removeListener('console-message', consoleError);
  }
+}
+
+export async function runDismissalSmoke(window){
+ const pause=ms=>new Promise(r=>setTimeout(r,ms));const evaluate=code=>window.webContents.executeJavaScript(code);
+ const original=await evaluate("(async()=> (await electronAPI.invoke('desktop.bootstrap')).settings)()");
+ const expanded=()=>evaluate("!!document.querySelector('.notch-surface.is-expanded')");
+ const mouse=selector=>evaluate(`document.querySelector(${JSON.stringify(selector)})?.dispatchEvent(new MouseEvent('click',{bubbles:true,detail:1}))`);
+ const enter=async()=>{window.webContents.sendInputEvent({type:'mouseMove',x:120,y:45});await pause(70);};
+ const leave=()=>window.webContents.sendInputEvent({type:'mouseLeave',x:-1,y:-1});
+ const setIgnore=window.setIgnoreMouseEvents;let ignoresMouse;
+ window.setIgnoreMouseEvents=function(ignore,...args){ignoresMouse=ignore;return setIgnore.call(this,ignore,...args);};
+ window.webContents.debugger.attach('1.3');
+ try{
+  await window.webContents.debugger.sendCommand('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
+  await evaluate(`electronAPI.invoke('settings.save',{settings:${JSON.stringify({...original,autoCollapseSeconds:2})}})`);
+  await mouse('button[aria-label="Collapse notch"]');await pause(700);await mouse('.notch-idle-open');await pause(700);await mouse('#tab-media');await enter();leave();
+  const started=Date.now();await pause(800);assert.equal(ignoresMouse,false,'expanded window cannot receive returning pointer');await evaluate("dispatchEvent(new Event('focus'))");await pause(900);assert(await expanded(),'pointer leave collapsed before two seconds');
+  while(await expanded()){assert(Date.now()-started<2700,'pointer leave did not collapse');await pause(20);}
+  const delayMs=Date.now()-started;assert(delayMs>=1900);await pause(850);assert(window.getBounds().height<120,'native bounds stayed expanded: '+JSON.stringify(window.getBounds()));
+  assert.equal(ignoresMouse,false,'settled pill cannot receive returning pointer');
+  await mouse('.notch-idle-open');await pause(700);await enter();leave();await pause(1200);await enter();await pause(1100);assert(await expanded(),'returning pointer did not cancel closing');
+  leave();await pause(800);await evaluate("dispatchEvent(new Event('blur'))");await pause(1400);assert(!await expanded(),'blur restarted the pointer-leave deadline');
+  await mouse('.notch-idle-open');await pause(700);await enter();leave();
+  window.focus();window.webContents.sendInputEvent({type:'keyDown',keyCode:'Tab'});window.webContents.sendInputEvent({type:'keyUp',keyCode:'Tab'});await pause(2200);assert(await expanded(),'keyboard activity was interrupted');
+  await evaluate("dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");await pause(90);assert(!await expanded(),'keyboard collapse was delayed');assert(window.getBounds().height<120,'keyboard native bounds were delayed');
+  await evaluate("document.querySelector('.notch-idle-open').click()");await pause(90);assert(await expanded(),'keyboard expansion was delayed');assert.equal(Math.round(await evaluate("document.querySelector('.notch-surface').getBoundingClientRect().height")),window.getBounds().height);
+  await enter();leave();await pause(2400);assert(!await expanded(),'stale keyboard focus prevented pointer dismissal');
+  return{delayMs,returnedPointerCancels:true,blurKeepsDeadline:true,lateFocusKeepsDeadline:true,keyboardProtected:true,keyboardInstant:true,staleFocusReleased:true,nativeBoundsRestored:true,settledWindowInteractive:true};
+ }finally{window.setIgnoreMouseEvents=setIgnore;await evaluate(`electronAPI.invoke('settings.save',{settings:${JSON.stringify(original)}})`);await window.webContents.debugger.sendCommand('Emulation.setEmulatedMedia',{features:[]});window.webContents.debugger.detach();}
 }

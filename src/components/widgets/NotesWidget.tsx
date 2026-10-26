@@ -15,7 +15,7 @@ export const NotesWidget:React.FC=()=>{
  };
  const restore=()=>{if(!recovery)return;setContent(recovery.content);setRestored(true);setStatus('Recovered draft opened. Save restored draft to replace the current desktop notes.');};
  const discard=()=>{if(!recovery)return;try{discardNotesRecovery(recovery.content,confirmedContent.current);setRecovery(null);setRestored(false);setContent(confirmedContent.current);setStatus('Recovery discarded. Last confirmed notes are shown.');}catch(e){setError(messageOf(e));}};
- return <section className="h-full p-5 flex flex-col gap-3" aria-label="Quick notes">
+ return <section className="h-full p-5 flex flex-col gap-3" aria-label="Quick notes" data-keep-open={saving||restored||content!==confirmedContent.current ? true : undefined}>
   <div className="flex justify-between text-xs text-muted"><h3 className="text-content text-sm">Quick notes</h3><span>{content.trim()?content.trim().split(/\s+/).length:0} words</span></div>
   {recovery&&<div className="glass-card p-3 space-y-2">
    <p className="text-xs text-warning">A local recovery draft is available ({new Date(recovery.updatedAt).toLocaleString()}).</p>

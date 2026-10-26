@@ -14,9 +14,9 @@ const tools = [
   { id: 'snapzones', label: 'Snap zones', description: 'Arrange your windows', group: 'Windows', icon: LayoutGrid },
   { id: 'system', label: 'System', description: 'Devices and desktop controls', group: 'Windows', icon: Monitor },
   { id: 'faceid', label: 'Windows Hello', description: 'Verify with Windows', group: 'Windows', icon: ScanFace },
-  { id: 'blip', label: 'Blip', description: 'Gemini setup required', group: 'Connected services', icon: Sparkles },
+  { id: 'blip', label: 'Blip', description: 'Chat, voice and screen help', group: 'Connected services', icon: Sparkles },
   { id: 'search', label: 'Circle to search', description: 'Ask about a selected image', group: 'Connected services', icon: Search },
-  { id: 'finance', label: 'Markets & sports', description: 'Provider setup required', group: 'Connected services', icon: TrendingUp },
+  { id: 'finance', label: 'Markets & sports', description: 'Market quotes and game scores', group: 'Connected services', icon: TrendingUp },
 ] as const;
 const daily = ['media', 'notes', 'focus', 'fileshelf'] as const;
 const groups = ['Media', 'Productivity', 'Windows', 'Connected services'];
@@ -59,6 +59,7 @@ export const HeaderNav: React.FC<{ activeTab: WidgetTab; onSelectTab: (tab: Widg
       const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('button'));
       const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
       const step = event.key === 'ArrowDown' || event.key === 'ArrowRight' ? 1 : event.key === 'ArrowUp' || event.key === 'ArrowLeft' ? -1 : 0;
+      if (event.key === 'Home' || event.key === 'End') { event.preventDefault(); buttons[event.key === 'Home' ? 0 : buttons.length - 1]?.focus(); }
       if (step) { event.preventDefault(); buttons[(index + step + buttons.length) % buttons.length]?.focus(); }
     }}>
       <div className="tools-picker-title"><h2>All tools</h2><button className="notch-icon-button" aria-label="Close all tools" onClick={() => close(true)}><X size={16} /></button></div>

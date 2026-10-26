@@ -33,8 +33,8 @@ void (async()=>{try{
  measuring=true;
  const result=await window.webContents.executeJavaScript(`(${async function(){
   const pause=ms=>new Promise(r=>setTimeout(r,ms));
-  const open=()=>document.querySelector('.notch-idle-open')?.click();
-  const close=()=>dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+  const open=()=>document.querySelector('.notch-idle-open')?.dispatchEvent(new MouseEvent('click',{bubbles:true,detail:1}));
+  const close=()=>document.querySelector('button[aria-label="Collapse notch"]')?.dispatchEvent(new MouseEvent('click',{bubbles:true,detail:1}));
   close();await pause(700);open();await pause(700);close();await pause(700);
   const frames=[],frameStalls=[];let sampling=true,phase='calibration';const frame=t=>{const prior=frames.at(-1);if(prior&&t-prior>50)frameStalls.push({phase,intervalMs:t-prior,focused:document.hasFocus(),visible:document.visibilityState});frames.push(t);if(sampling)requestAnimationFrame(frame);};
   requestAnimationFrame(frame);await pause(1500);sampling=false;await pause(30);

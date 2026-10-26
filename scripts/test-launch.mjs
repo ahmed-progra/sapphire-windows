@@ -3,7 +3,7 @@ import {app,BrowserWindow} from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
-const scenario=process.argv[2];
+const scenario=process.argv[2]??'legacy-102';
 assert(['legacy-102','legacy-110','startup'].includes(scenario));
 const restarting=process.argv.includes('--restart');
 const output=path.resolve('.test-output','launch-'+scenario),profile=path.join(output,'profile');
